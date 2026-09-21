@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python AR: Condition Quest</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    
+    <!-- Tone.js for Sound Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- SheetJS for Excel Upload -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --mint: #6EE7B7;
+            --emerald: #10B981;
+            --yellow: #FDE68A;
+            --white: #FFFBF5;
+            --slate: #334155;
+            --bg-dark: #0f172a;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--white);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Video and Canvas Setup */
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        #webcam {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            filter: brightness(0.4) blur(4px);
+        }
+
+        #output_canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            z-index: 2;
+        }
+
+        /* UI Layer */
+        #ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(110, 231, 183, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+        }
+
+        /* AR Cursor */
+        #ar-cursor {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid var(--mint);
+            background-color: rgba(110, 231, 183, 0.2);
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            pointer-events: none;
+            transition: transform 0.1s ease-out, background-color 0.1s, width 0.1s, height 0.1s;
+            box-shadow: 0 0 15px var(--mint);
+            display: none;
+        }
+
+        #ar-cursor.pinching {
+            width: 20px;
+            height: 20px;
+            background-color: var(--yellow);
+            border-color: var(--yellow);
+            box-shadow: 0 0 25px var(--yellow);
+        }
+
+        /* Interactive Elements */
+        .ar-btn {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .ar-btn.hovered {
+            transform: scale(1.05);
+            border-color: var(--mint);
+            box-shadow: 0 0 15px rgba(110, 231, 183, 0.5);
+        }
+
+        /* Code Editor Style */
+        .editor-window {
+            background: #1e1e1e;
+            border-radius: 12px;
+            border: 1px solid #333;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .editor-header {
+            background: #2d2d2d;
+            padding: 8px 16px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .mac-btn { width: 12px; height: 12px; border-radius: 50%; }
+        .mac-red { background: #ff5f56; }
+        .mac-yellow { background: #ffbd2e; }
+        .mac-green { background: #27c93f; }
+
+        /* Drag & Drop Blocks */
+        .drop-zone {
+            display: inline-block;
+            min-width: 80px;
+            height: 36px;
+            border: 2px dashed #64748b;
+            border-radius: 8px;
+            background: rgba(100, 116, 139, 0.2);
+            vertical-align: middle;
+            margin: 0 5px;
+            transition: all 0.2s;
+        }
+        .drop-zone.active-target {
+            border-color: var(--yellow);
+            background: rgba(253, 230, 138, 0.3);
+            box-shadow: 0 0 15px rgba(253, 230, 138, 0.5);
+        }
+        .drop-zone.filled-correct {
+            border-color: var(--emerald);
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--emerald);
+            border-style: solid;
+        }
+        .drop-zone.filled-wrong {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border-style: solid;
+        }
+
+        .code-block {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #334155, #1e293b);
+            border: 2px solid #475569;
+            border-radius: 8px;
+            color: var(--mint);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            user-select: none;
+            transition: transform 0.1s, box-shadow 0.1s;
+            cursor: grab;
+        }
+        
+        .code-block.hovered {
+            border-color: var(--yellow);
+            box-shadow: 0 0 15px rgba(253, 230, 138, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .code-block.dragging {
+            position: fixed !important;
+            z-index: 10000;
+            pointer-events: none; /* Let pointer pass through to detect drop zone */
+            transform: translate(-50%, -50%) scale(1.1);
+            border-color: var(--mint);
+            box-shadow: 0 10px 25px rgba(110, 231, 183, 0.6);
+            background: #1e293b;
+            cursor: grabbing;
+        }
+
+        /* Syntax Highlighting */
+        .kw { color: #c678dd; } /* keyword */
+        .op { color: #56b6c2; } /* operator */
+        .str { color: #98c379; } /* string */
+        .var { color: #e06c75; } /* variable */
+        .num { color: #d19a66; } /* number */
+        .fn { color: #61afef; } /* function */
+
+        .loader {
+            border: 4px solid rgba(255, 251, 245, 0.1);
+            border-left-color: var(--mint);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="video-container">
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="output_canvas"></canvas>
+    </div>
+
+    <!-- AR Cursor -->
+    <div id="ar-cursor"></div>
+
+    <div id="ui-layer" class="p-4 md:p-8 justify-center items-center">
+        
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="glass-panel w-full max-w-md p-10 rounded-3xl text-center flex flex-col items-center shadow-2xl">
+            <h1 class="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">AR Code Engine</h1>
+            <div class="loader mb-6"></div>
+            <p class="text-gray-300 font-semibold mb-2">กำลังเชื่อมต่อกล้องและระบบ AI...</p>
+            <p class="text-xs text-teal-200">กรุณาอนุญาตการเข้าถึงกล้องเว็บแคม</p>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="glass-panel w-full max-w-lg p-8 rounded-3xl hidden flex-col items-center">
+            <div class="bg-emerald-500/20 p-4 rounded-2xl mb-4 border border-emerald-500/50">
+                <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            </div>
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-300 mb-2 text-center">Python AR</h1>
+            <h2 class="text-xl font-bold text-white tracking-widest mb-6">CONDITION QUEST</h2>
+            
+            <div class="w-full mb-6 pointer-events-auto">
+                <label class="block text-emerald-400 font-semibold mb-2 text-sm">STUDENT ID</label>
+                <input type="text" id="student-id" class="w-full bg-slate-900/80 border-2 border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-400 transition" placeholder="ระบุรหัสนักเรียนของคุณ...">
+            </div>
+
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 mb-6 text-sm text-gray-300 w-full shadow-inner">
+                <p class="font-bold text-yellow-300 mb-2 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                    AR Drag & Drop Mode:
+                </p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>ใช้ <b>นิ้วชี้</b> เล็งไปที่บล็อกโค้ดด้านล่าง (หรือใช้เมาส์)</li>
+                    <li><b>จีบนิ้ว</b> (นิ้วชี้+โป้ง) ค้างไว้เพื่อ <b>หยิบ</b> บล็อกโค้ด</li>
+                    <li><b>ลาก</b> ไปใส่ใน <b>[ ช่องว่าง ]</b> ใน Editor แล้วปล่อยนิ้ว</li>
+                </ul>
+            </div>
+
+            <button id="start-btn" class="ar-btn w-full bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-900 font-extrabold text-xl py-4 rounded-xl shadow-[0_0_20px_rgba(52,211,153,0.5)] uppercase tracking-wider mb-4">
+                Initialize Quest
+            </button>
+
+            <button id="open-manage-btn" class="ar-btn w-full bg-slate-800 text-emerald-400 font-bold text-lg py-3 rounded-xl border-2 border-emerald-500/50 hover:bg-emerald-500/10 transition-colors flex justify-center items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                จัดการคำถาม (Manage Questions)
+            </button>
+        </div>
+
+        <!-- Password Modal -->
+        <div id="password-modal" class="absolute inset-0 z-50 hidden flex-col justify-center items-center bg-slate-900/90 backdrop-blur-md pointer-events-auto">
+            <div class="glass-panel p-8 rounded-2xl w-full max-w-sm flex flex-col items-center shadow-2xl border border-teal-500/30">
+                <h3 class="text-2xl font-bold text-white mb-2">Admin Access</h3>
+                <p class="text-sm text-gray-400 mb-6 text-center">กรุณาใส่รหัสผ่านเพื่อจัดการคำถาม</p>
+                <input type="password" id="admin-password" class="w-full bg-slate-900/80 border-2 border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition mb-4 text-center" placeholder="รหัสผ่าน...">
+                <p id="password-error" class="text-red-400 text-sm mb-4 hidden">รหัสผ่านไม่ถูกต้อง!</p>
+                <div class="flex w-full gap-3">
+                    <button id="cancel-password-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-xl font-bold hover:bg-slate-600 transition cursor-pointer">ยกเลิก</button>
+                    <button id="submit-password-btn" class="flex-1 bg-teal-500 text-slate-900 py-3 rounded-xl font-bold hover:bg-teal-400 transition cursor-pointer">ยืนยัน</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gameplay Screen -->
+        <div id="game-screen" class="w-full h-full hidden flex-col relative pointer-events-none">
+            
+            <!-- HUD -->
+            <div class="flex justify-between items-start w-full max-w-6xl mx-auto pointer-events-auto mt-4 px-4">
+                <div class="glass-panel px-6 py-3 rounded-2xl flex items-center gap-6">
+                    <div>
+                        <p class="text-[10px] text-teal-400 font-bold uppercase tracking-widest">Score</p>
+                        <p id="score-display" class="text-2xl font-black text-yellow-300 font-mono">0</p>
+                    </div>
+                    <div class="w-px h-8 bg-slate-600"></div>
+                    <div>
+                        <p class="text-[10px] text-teal-400 font-bold uppercase tracking-widest">Time</p>
+                        <p id="time-display" class="text-2xl font-bold text-white font-mono">00:00</p>
+                    </div>
+                    <div class="w-px h-8 bg-slate-600"></div>
+                    <button id="abort-btn" class="bg-red-500/20 text-red-400 border border-red-500 rounded-lg px-4 py-2 font-bold hover:bg-red-500 hover:text-white transition-colors cursor-pointer pointer-events-auto">
+                        Abort Mission
+                    </button>
+                </div>
+                
+                <div class="glass-panel px-6 py-3 rounded-2xl flex flex-col items-end">
+                    <p class="text-[10px] text-teal-400 font-bold uppercase tracking-widest mb-1">Compilation Progress</p>
+                    <div class="flex items-center gap-3">
+                        <p id="progress-text" class="font-bold text-white font-mono text-sm">1/10</p>
+                        <div class="w-32 md:w-48 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-600">
+                            <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-teal-400 to-emerald-400 w-0% transition-all duration-300"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="flex-1 flex flex-col justify-center items-center w-full max-w-4xl mx-auto p-4 pointer-events-none gap-6 mt-8">
+                
+                <!-- Instruction -->
+                <div class="glass-panel w-full px-6 py-4 rounded-2xl pointer-events-auto flex items-center gap-4">
+                    <h2 class="text-lg md:text-xl font-bold text-white" id="question-text">ลากคำสั่งที่ถูกต้องไปเติมในช่องว่าง</h2>
+                </div>
+
+                <!-- Code Editor -->
+                <div class="editor-window w-full pointer-events-auto flex flex-col">
+                    <div class="editor-header">
+                        <div class="mac-btn mac-red"></div>
+                        <div class="mac-btn mac-yellow"></div>
+                        <div class="mac-btn mac-green"></div>
+                        <span class="ml-4 text-xs text-gray-500 font-mono">main.py</span>
+                    </div>
+                    <div class="p-6 bg-[#1e1e1e] min-h-[200px] flex items-center text-lg md:text-xl code-font leading-loose" id="code-container">
+                        <!-- Code content injected here -->
+                    </div>
+                </div>
+
+                <!-- Draggable Blocks Inventory -->
+                <div class="w-full glass-panel p-6 rounded-2xl pointer-events-auto flex flex-col items-center">
+                    <p class="text-xs text-gray-400 uppercase tracking-widest mb-4 font-bold">Available Code Blocks</p>
+                    <div id="blocks-inventory" class="flex flex-wrap justify-center gap-4">
+                        <!-- Blocks injected here -->
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Feedback Overlay -->
+            <div id="feedback-overlay" class="absolute inset-0 z-50 hidden flex-col justify-center items-center bg-slate-900/90 backdrop-blur-md">
+                <div id="feedback-icon" class="w-28 h-28 rounded-full flex items-center justify-center mb-6 text-6xl shadow-2xl"></div>
+                <h2 id="feedback-text" class="text-5xl font-black text-white mb-3 tracking-wide"></h2>
+                <p id="feedback-subtext" class="text-xl text-gray-300 font-mono"></p>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="glass-panel w-full max-w-lg p-10 rounded-3xl hidden flex-col items-center pointer-events-auto">
+            <h1 class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-300 mb-2 text-center uppercase tracking-tight">Mission<br>Complete</h1>
+            <p class="text-gray-400 mb-8 font-mono">Performance Report Generated</p>
+            
+            <div class="w-full bg-slate-900/80 rounded-2xl p-6 mb-8 border border-slate-700 shadow-inner">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                    <span class="text-gray-400 font-mono text-sm">Developer ID:</span>
+                    <span id="res-student" class="font-bold text-teal-400 text-lg"></span>
+                </div>
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                    <span class="text-gray-400 font-mono text-sm">Total Score:</span>
+                    <span class="font-black text-yellow-300 text-4xl"><span id="res-score"></span></span>
+                </div>
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                    <span class="text-gray-400 font-mono text-sm">Code Accuracy:</span>
+                    <span id="res-accuracy" class="font-bold text-white text-xl"></span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 font-mono text-sm">Execution Time:</span>
+                    <span id="res-time" class="font-bold text-white text-xl"></span>
+                </div>
+            </div>
+
+            <p id="sync-status" class="text-sm text-gray-400 mb-6 font-mono flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> Syncing to Cloud Database...
+            </p>
+
+            <button id="restart-btn" class="ar-btn w-full bg-slate-800 text-white font-bold text-lg py-4 rounded-xl border-2 border-slate-600 hover:border-teal-400 uppercase tracking-widest transition-colors cursor-pointer">
+                Reboot System
+            </button>
+        </div>
+
+        <!-- Manage Questions Screen -->
+        <div id="manage-screen" class="glass-panel w-full max-w-4xl p-8 rounded-3xl hidden flex-col items-center max-h-[90vh] overflow-y-auto pointer-events-auto">
+            <div class="w-full flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-extrabold text-emerald-400">Question Database</h2>
+                <button id="close-manage-btn" class="text-gray-400 hover:text-white transition cursor-pointer">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Upload Excel Section -->
+            <div class="w-full bg-slate-900/60 p-6 rounded-xl border border-slate-700 mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-teal-400 mb-1">Import from Excel/CSV</h3>
+                    <p class="text-xs text-gray-400 mb-2">หัวคอลัมน์: Question, Code, CorrectAnswer, Choices (ตัวเลือกคั่นด้วย , )</p>
+                    <button id="download-template-btn" class="text-xs bg-slate-700 hover:bg-slate-600 text-teal-300 py-1.5 px-3 rounded border border-slate-500 transition cursor-pointer flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> ดาวน์โหลดไฟล์เทมเพลต (CSV)
+                    </button>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+                    <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-teal-500/20 file:text-teal-400 hover:file:bg-teal-500/30 cursor-pointer w-full md:w-auto">
+                    <button id="import-excel-btn" class="bg-teal-500 text-slate-900 font-bold px-4 py-2 rounded-lg hover:bg-teal-400 transition cursor-pointer whitespace-nowrap">
+                        Upload
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add Manually Section -->
+            <div class="w-full bg-slate-900/60 p-6 rounded-xl border border-slate-700 mb-6">
+                <h3 class="text-lg font-bold text-yellow-300 mb-4">Add New Question</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Question (คำถาม)</label>
+                        <input type="text" id="new-q-text" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Code (ใส่ &lt;div class="drop-zone" data-target="คำตอบ"&gt;&lt;/div&gt; ตรงช่องว่าง)</label>
+                        <textarea id="new-q-code" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white font-mono text-sm h-10"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Correct Answer (คำตอบที่ถูก)</label>
+                        <input type="text" id="new-q-ans" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Choices (ตัวเลือก คั่นด้วยลูกน้ำ , )</label>
+                        <input type="text" id="new-q-choices" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white" placeholder="if, elif, else">
+                    </div>
+                </div>
+                <button id="add-q-btn" class="bg-emerald-500 text-slate-900 font-bold px-6 py-2 rounded-lg hover:bg-emerald-400 transition w-full md:w-auto cursor-pointer">
+                    Add Question
+                </button>
+            </div>
+
+            <div class="w-full">
+                <h3 class="text-lg font-bold text-white mb-4">Current Questions (<span id="q-count">0</span>)</h3>
+                <div id="q-list" class="flex flex-col gap-3 w-full">
+                    <!-- List injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION & GLOBAL VARIABLES
+        // ==========================================
+        
+        // 🔹 ใส่ URL ของ Google Apps Script ที่นี่ 🔹
+        const APPS_SCRIPT_URL = ""; 
+
+        let state = {
+            studentId: "",
+            currentQuestionIndex: 0,
+            score: 0,
+            startTime: 0,
+            totalTime: 0,
+            timerInterval: null,
+            questions: [],
+            totalQuestions: 10,
+            sessionData: []
+        };
+
+        const ui = {
+            cursor: document.getElementById('ar-cursor'),
+            login: document.getElementById('login-screen'),
+            game: document.getElementById('game-screen'),
+            result: document.getElementById('result-screen'),
+            loading: document.getElementById('loading-screen'),
+            manage: document.getElementById('manage-screen'),
+            codeContainer: document.getElementById('code-container'),
+            inventory: document.getElementById('blocks-inventory')
+        };
+        
+        // AR Interaction State
+        let cursorX = window.innerWidth / 2;
+        let cursorY = window.innerHeight / 2;
+        let isPinching = false;
+        let draggedBlock = null;
+        let hoveredElement = null;
+        let currentDropZone = null;
+        let isProcessingAnswer = false;
+
+        // ==========================================
+        // SOUND EFFECTS SETUP (Tone.js)
+        // ==========================================
+        let audioSynth;
+        
+        async function initAudio() {
+            if (audioSynth) return;
+            await Tone.start();
+            audioSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 1 }
+            }).toDestination();
+        }
+
+        function playCorrectSound() {
+            if (!audioSynth) return;
+            const now = Tone.now();
+            audioSynth.triggerAttackRelease("C5", "16n", now);
+            audioSynth.triggerAttackRelease("E5", "16n", now + 0.1);
+            audioSynth.triggerAttackRelease("G5", "8n", now + 0.2);
+        }
+
+        function playWrongSound() {
+            if (!audioSynth) return;
+            const now = Tone.now();
+            audioSynth.triggerAttackRelease(["C3", "Db3"], "8n", now);
+            audioSynth.triggerAttackRelease(["B2", "C3"], "4n", now + 0.15);
+        }
+
+        function playGrabSound() {
+            if (!audioSynth) return;
+            audioSynth.triggerAttackRelease("G4", "32n", Tone.now(), 0.1);
+        }
+
+        // ==========================================
+        // QUESTION DATABASE (Drag & Drop Focus)
+        // 30 Questions covering if, elif, else, operators
+        // ==========================================
+        const qBank = [
+            { q: "ลากคำสั่งตรวจสอบเงื่อนไขหลักไปเติมให้ถูกต้อง", ans: "if", choices: ["if", "elif", "else"],
+              code: `<span class="var">age</span> = <span class="num">15</span>\n<div class="drop-zone" data-target="if"></div> <span class="var">age</span> >= <span class="num">18</span>:\n    <span class="fn">print</span>(<span class="str">'Adult'</span>)` },
+            { q: "เติมคำสั่งสำหรับกรณีที่ไม่ตรงกับเงื่อนไขใดเลย", ans: "else:", choices: ["else:", "elif:", "if:"],
+              code: `<span class="kw">if</span> <span class="var">x</span> > <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">'Yes'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
+            { q: "ลากตัวดำเนินการ 'เท่ากับ' ไปใส่ในโค้ด", ans: "==", choices: ["==", "=", "!=", ">="],
+              code: `<span class="kw">if</span> <span class="var">pwd</span> <div class="drop-zone" data-target="=="></div> <span class="str">'1234'</span>:\n    <span class="fn">print</span>(<span class="str">'Welcome'</span>)` },
+            { q: "เติมคำสั่งสำหรับเงื่อนไขที่สอง (ถ้าเงื่อนไขแรกเป็นเท็จ)", ans: "elif", choices: ["elif", "else", "if"],
+              code: `<span class="kw">if</span> <span class="var">score</span> >= <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">score</span> >= <span class="num">70</span>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
+            { q: "ลากตัวดำเนินการ 'ไม่เท่ากับ' ไปใส่ในโค้ด", ans: "!=", choices: ["!=", "==", "not", "<>"],
+              code: `<span class="kw">if</span> <span class="var">status</span> <div class="drop-zone" data-target="!="></div> <span class="str">'admin'</span>:\n    <span class="fn">print</span>(<span class="str">'Access Denied'</span>)` },
+            { q: "เติมโครงสร้างให้สมบูรณ์เมื่อต้องการเช็คเงื่อนไขเดียว", ans: "if", choices: ["if", "elif", "else"],
+              code: `<div class="drop-zone" data-target="if"></div> <span class="var">money</span> < <span class="num">100</span>:\n    <span class="fn">print</span>(<span class="str">'Not enough'</span>)` },
+            { q: "โปรแกรมทายตัวเลข โค้ดส่วนใดหายไป?", ans: "elif", choices: ["elif", "else", "if"],
+              code: `<span class="kw">if</span> <span class="var">guess</span> > <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too high'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">guess</span> < <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too low'</span>)` },
+            { q: "ตัวดำเนินการใดแปลว่า 'น้อยกว่าหรือเท่ากับ'", ans: "<=", choices: ["<=", ">=", "<", "=="],
+              code: `<span class="kw">if</span> <span class="var">stock</span> <div class="drop-zone" data-target="<="></div> <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">'Reorder needed'</span>)` },
+            { q: "ไวยากรณ์ (Syntax) ที่ถูกต้องต้องมีอะไรปิดท้ายบรรทัด if?", ans: ":", choices: [":", ";", "{", "()"],
+              code: `<span class="kw">if</span> <span class="var">is_rainy</span> == <span class="kw">True</span><div class="drop-zone" data-target=":"></div>\n    <span class="fn">print</span>(<span class="str">'Take umbrella'</span>)` },
+            { q: "คำสั่งใดใช้ตรวจสอบเมื่อ if ก่อนหน้าไม่เป็นจริง", ans: "elif", choices: ["elif", "else if", "elseif"],
+              code: `<span class="kw">if</span> <span class="var">x</span> == <span class="num">1</span>:\n    ...\n<div class="drop-zone" data-target="elif"></div> <span class="var">x</span> == <span class="num">2</span>:\n    ...` },
+            { q: "โค้ดตัดเกรดนี้ ขาดเครื่องหมายเปรียบเทียบใดเพื่อให้คนที่ได้ 80 พอดีได้เกรด A", ans: ">=", choices: [">=", ">", "==", "<="],
+              code: `<span class="kw">if</span> <span class="var">score</span> <div class="drop-zone" data-target=">="></div> <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)` },
+            { q: "หาผลลัพธ์: x = 10, y = 5 จะแสดงผลคำว่าอะไร?", ans: "print('B')", choices: ["print('B')", "print('A')", "print('C')"],
+              code: `<span class="var">x</span> = <span class="num">10</span>; <span class="var">y</span> = <span class="num">5</span>\n<span class="kw">if</span> <span class="var">x</span> < <span class="var">y</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">else</span>:\n    <div class="drop-zone" data-target="print('B')"></div>` },
+            { q: "ผู้เล่นอายุน้อยกว่า 13 ห้ามเล่น เติมตัวดำเนินการที่เหมาะสม", ans: "<", choices: ["<", "<=", ">", "=="],
+              code: `<span class="kw">if</span> <span class="var">age</span> <div class="drop-zone" data-target="<"></div> <span class="num">13</span>:\n    <span class="fn">print</span>(<span class="str">'Not allowed'</span>)` },
+            { q: "ถ้าต้องการตรวจสอบว่าเลขเป็นจำนวนคู่ (หาร 2 ลงตัว)", ans: "% 2 == 0", choices: ["% 2 == 0", "/ 2 == 0", "% 2 != 0"],
+              code: `<span class="kw">if</span> <span class="var">number</span> <div class="drop-zone" data-target="% 2 == 0"></div>:\n    <span class="fn">print</span>(<span class="str">'Even'</span>)` },
+            { q: "โครงสร้าง if-elif-else ต้องจบด้วยอะไร (หากครอบคลุมกรณีที่เหลือ)", ans: "else:", choices: ["else:", "elif:", "endif:"],
+              code: `<span class="kw">if</span> <span class="var">x</span> > <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Pos'</span>)\n<span class="kw">elif</span> <span class="var">x</span> < <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Neg'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'Zero'</span>)` },
+            { q: "แก้ไข Bug: บรรทัดใดขาดเครื่องหมาย Colon (:)", ans: "elif temp > 30:", choices: ["elif temp > 30:", "if temp > 40:", "else:"],
+              code: `<span class="kw">if</span> <span class="var">temp</span> > <span class="num">40</span>:\n    <span class="fn">print</span>(<span class="str">'Very Hot'</span>)\n<div class="drop-zone" data-target="elif temp > 30:"></div>\n    <span class="fn">print</span>(<span class="str">'Hot'</span>)` },
+            { q: "ลากเงื่อนไขที่รวม 2 กรณีด้วย 'หรือ' (or)", ans: "or", choices: ["or", "and", "not", "&&"],
+              code: `<span class="kw">if</span> <span class="var">day</span> == <span class="str">'Sat'</span> <div class="drop-zone" data-target="or"></div> <span class="var">day</span> == <span class="str">'Sun'</span>:\n    <span class="fn">print</span>(<span class="str">'Weekend'</span>)` },
+            { q: "ผลลัพธ์ของโค้ดคืออะไร (num = 7)?", ans: "print('Yes')", choices: ["print('Yes')", "print('No')", "Error"],
+              code: `<span class="var">num</span> = <span class="num">7</span>\n<span class="kw">if</span> <span class="var">num</span> > <span class="num">5</span> <span class="kw">and</span> <span class="var">num</span> < <span class="num">10</span>:\n    <div class="drop-zone" data-target="print('Yes')"></div>\n<span class="kw">else</span>:\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
+            { q: "ตรวจสอบตัวแปรข้อความว่าเป็นค่าว่างหรือไม่", ans: "== ''", choices: ["== ''", "== 0", "== None"],
+              code: `<span class="kw">if</span> <span class="var">name</span> <div class="drop-zone" data-target="== ''"></div>:\n    <span class="fn">print</span>(<span class="str">'Please enter name'</span>)` },
+            { q: "การเขียนเงื่อนไขแบบลดรูป (Shorthand) ตัวแปร x เป็นจริง", ans: "if x:", choices: ["if x:", "if x == True:", "if x is True:"],
+              code: `<span class="var">x</span> = <span class="kw">True</span>\n<div class="drop-zone" data-target="if x:"></div>\n    <span class="fn">print</span>(<span class="str">'Is True'</span>)` },
+            { q: "ลำดับการทำงาน: ระบบตัดเกรดต้องเรียงจากคะแนนสูงไปต่ำ ลากเงื่อนไขที่ถูกต้อง", ans: "score >= 70", choices: ["score >= 70", "score >= 80", "score < 70"],
+              code: `<span class="kw">if</span> <span class="var">score</span> >= <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">elif</span> <span class="var">score</span> <div class="drop-zone" data-target="score >= 70"></div>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
+            { q: "Nested if (if ซ้อน if) เติมบรรทัดที่ทำให้โค้ดทำงานถูกต้องเมื่อ x=10, y=20", ans: "if y > 15:", choices: ["if y > 15:", "if y < 15:", "elif y > 15:"],
+              code: `<span class="kw">if</span> <span class="var">x</span> == <span class="num">10</span>:\n    <div class="drop-zone" data-target="if y > 15:"></div>\n        <span class="fn">print</span>(<span class="str">'x is 10 and y > 15'</span>)` },
+            { q: "ลากเงื่อนไขที่เทียบเท่ากับ: if not (x == y):", ans: "x != y", choices: ["x != y", "x <> y", "x not y", "x == y"],
+              code: `<span class="kw">if</span> <span class="var">x</span> <div class="drop-zone" data-target="x != y"></div>:\n    <span class="fn">print</span>(<span class="str">'Different'</span>)` },
+            { q: "คำนวณส่วนลด: ถ้ายอดซื้อ (total) เกิน 500 ลด 10%", ans: "total * 0.9", choices: ["total * 0.9", "total - 10", "total * 0.1"],
+              code: `<span class="kw">if</span> <span class="var">total</span> > <span class="num">500</span>:\n    <span class="var">pay</span> = <div class="drop-zone" data-target="total * 0.9"></div>` },
+            { q: "ตรวจสอบความยาวรหัสผ่าน (pwd) ว่าต้อง 8 ตัวขึ้นไป ใช้ฟังก์ชันใด?", ans: "len(pwd)", choices: ["len(pwd)", "pwd.length", "size(pwd)"],
+              code: `<span class="kw">if</span> <div class="drop-zone" data-target="len(pwd)"></div> >= <span class="num">8</span>:\n    <span class="fn">print</span>(<span class="str">'Valid'</span>)` },
+            { q: "โปรแกรมคิดค่าส่งฟรี: สมาชิก(is_member) หรือ ยอดซื้อ>=1000", ans: "or", choices: ["or", "and", "not"],
+              code: `<span class="kw">if</span> <span class="var">is_member</span> <div class="drop-zone" data-target="or"></div> <span class="var">purchase</span> >= <span class="num">1000</span>:\n    <span class="fn">print</span>(<span class="str">'Free Shipping'</span>)` },
+            { q: "แก้ Logic Error: โค้ดนี้เช็คว่าเลขอยู่ในช่วง 10-20 หรือไม่", ans: "and", choices: ["and", "or", "&"],
+              code: `<span class="kw">if</span> <span class="var">num</span> >= <span class="num">10</span> <div class="drop-zone" data-target="and"></div> <span class="var">num</span> <= <span class="num">20</span>:\n    <span class="fn">print</span>(<span class="str">'In range'</span>)` },
+            { q: "การเช็คชนิดข้อมูล: ถ้ารับค่า x มาเป็นตัวเลข", ans: "type(x) == int", choices: ["type(x) == int", "x == int", "int(x) == True"],
+              code: `<span class="kw">if</span> <div class="drop-zone" data-target="type(x) == int"></div>:\n    <span class="fn">print</span>(<span class="str">'Is Integer'</span>)` },
+            { q: "ตรวจสอบว่าค่าตัวแปรลิสต์ว่างหรือไม่", ans: "len(my_list) == 0", choices: ["len(my_list) == 0", "my_list == empty", "my_list == None"],
+              code: `<span class="kw">if</span> <div class="drop-zone" data-target="len(my_list) == 0"></div>:\n    <span class="fn">print</span>(<span class="str">'List is empty'</span>)` },
+            { q: "เงื่อนไขใดเป็นจริง (True) เสมอในตัวเลือกเหล่านี้", ans: "1 == 1", choices: ["1 == 1", "0", "False", "None"],
+              code: `<span class="kw">if</span> <div class="drop-zone" data-target="1 == 1"></div>:\n    <span class="fn">print</span>(<span class="str">'Always runs'</span>)` }
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        // ==========================================
+        // AR HAND TRACKING & DRAG-DROP SYSTEM
+        // ==========================================
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+
+        function onResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(110, 231, 183, 0.4)', lineWidth: 3});
+                    drawLandmarks(canvasCtx, landmarks, {color: '#FDE68A', lineWidth: 1, radius: 2});
+                    
+                    const indexTip = landmarks[8];
+                    const thumbTip = landmarks[4];
+
+                    // Map coordinates (mirrored horizontally)
+                    cursorX = (1 - indexTip.x) * window.innerWidth; 
+                    cursorY = indexTip.y * window.innerHeight;
+
+                    ui.cursor.style.left = `${cursorX}px`;
+                    ui.cursor.style.top = `${cursorY}px`;
+                    ui.cursor.style.display = 'block';
+
+                    // Detect Pinch
+                    const distance = Math.sqrt(Math.pow(indexTip.x - thumbTip.x, 2) + Math.pow(indexTip.y - thumbTip.y, 2));
+                    const PINCH_THRESHOLD = 0.05; 
+                    
+                    if (distance < PINCH_THRESHOLD) {
+                        if (!isPinching) {
+                            isPinching = true;
+                            ui.cursor.classList.add('pinching');
+                            handlePinchStart();
+                        } else if (draggedBlock) {
+                            // Dragging update
+                            draggedBlock.style.left = `${cursorX}px`;
+                            draggedBlock.style.top = `${cursorY}px`;
+                            checkDropZoneHover();
+                        }
+                    } else {
+                        if (isPinching) {
+                            isPinching = false;
+                            ui.cursor.classList.remove('pinching');
+                            handlePinchEnd();
+                        }
+                    }
+                    
+                    if(!isPinching && !draggedBlock) checkHover();
+                }
+            } else {
+                ui.cursor.style.display = 'none';
+                if(isPinching) {
+                    isPinching = false;
+                    handlePinchEnd();
+                }
+                clearHoverState();
+            }
+            canvasCtx.restore();
+        }
+
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+        hands.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => { await hands.send({image: videoElement}); },
+            width: 1280, height: 720
+        });
+
+        camera.start().then(() => {
+            ui.loading.classList.add('hidden');
+            ui.login.classList.remove('hidden');
+            ui.login.classList.add('flex');
+            
+            window.addEventListener('resize', () => {
+                canvasElement.width = window.innerWidth;
+                canvasElement.height = window.innerHeight;
+            });
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        // --- Interaction Logic ---
+        function checkHover() {
+            ui.cursor.style.display = 'none'; 
+            const el = document.elementFromPoint(cursorX, cursorY);
+            ui.cursor.style.display = 'block';
+
+            let target = el ? el.closest('.ar-btn') || el.closest('.code-block') : null;
+
+            if (hoveredElement !== target) {
+                if (hoveredElement) hoveredElement.classList.remove('hovered');
+                hoveredElement = target;
+                if (hoveredElement) hoveredElement.classList.add('hovered');
+            }
+        }
+
+        function clearHoverState() {
+            if (hoveredElement) {
+                hoveredElement.classList.remove('hovered');
+                hoveredElement = null;
+            }
+            if (currentDropZone) {
+                currentDropZone.classList.remove('active-target');
+                currentDropZone = null;
+            }
+        }
+
+        function handlePinchStart() {
+            if (isProcessingAnswer) return;
+
+            ui.cursor.style.display = 'none'; 
+            const el = document.elementFromPoint(cursorX, cursorY);
+            ui.cursor.style.display = 'block';
+
+            if (el && el.closest('.ar-btn')) {
+                el.closest('.ar-btn').click();
+                return;
+            }
+
+            if (el && el.closest('.code-block')) {
+                draggedBlock = el.closest('.code-block');
+                playGrabSound(); 
+
+                const rect = draggedBlock.getBoundingClientRect();
+                draggedBlock.style.width = `${rect.width}px`; 
+                
+                // Append to body temporarily to avoid clipping issues
+                document.body.appendChild(draggedBlock);
+                
+                draggedBlock.classList.add('dragging');
+                draggedBlock.style.left = `${cursorX}px`;
+                draggedBlock.style.top = `${cursorY}px`;
+            }
+        }
+
+        function checkDropZoneHover() {
+            if (!draggedBlock) return;
+            const el = document.elementFromPoint(cursorX, cursorY);
+            let dropZone = el ? el.closest('.drop-zone') : null;
+
+            if (currentDropZone !== dropZone) {
+                if (currentDropZone) currentDropZone.classList.remove('active-target');
+                currentDropZone = dropZone;
+                if (currentDropZone) currentDropZone.classList.add('active-target');
+            }
+        }
+
+        function handlePinchEnd() {
+            if (!draggedBlock) return;
+            
+            if (currentDropZone) {
+                evaluateDrop(draggedBlock, currentDropZone);
+            } else {
+                returnBlockToInventory(draggedBlock);
+            }
+            
+            draggedBlock.classList.remove('dragging');
+            draggedBlock.style.left = '';
+            draggedBlock.style.top = '';
+            draggedBlock.style.width = '';
+            draggedBlock = null;
+            clearHoverState();
+        }
+
+        function returnBlockToInventory(block) {
+            ui.inventory.appendChild(block);
+        }
+
+        // ==========================================
+        // GAME LOGIC
+        // ==========================================
+        document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('restart-btn').addEventListener('click', resetGame);
+        document.getElementById('abort-btn').addEventListener('click', endGame);
+
+        async function startGame() {
+            await initAudio(); // Start audio context on user gesture
+
+            const idInput = document.getElementById('student-id').value.trim();
+            if(!idInput) {
+                document.getElementById('student-id').classList.add('border-red-500', 'animate-pulse');
+                setTimeout(() => document.getElementById('student-id').classList.remove('border-red-500', 'animate-pulse'), 1000);
+                return;
+            }
+
+            state.studentId = idInput;
+            state.score = 0;
+            state.currentQuestionIndex = 0;
+            state.totalTime = 0;
+            state.sessionData = [];
+            
+            state.questions = shuffleArray([...qBank]).slice(0, state.totalQuestions);
+
+            ui.login.classList.remove('flex');
+            ui.login.classList.add('hidden');
+            ui.game.classList.remove('hidden');
+            ui.game.classList.add('flex');
+
+            state.startTime = Date.now();
+            if(state.timerInterval) clearInterval(state.timerInterval);
+            state.timerInterval = setInterval(() => {
+                const secondsPassed = Math.floor((Date.now() - state.startTime) / 1000);
+                document.getElementById('time-display').innerText = formatTime(secondsPassed);
+                state.totalTime = secondsPassed;
+            }, 1000);
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (state.currentQuestionIndex >= state.totalQuestions) {
+                endGame();
+                return;
+            }
+
+            isProcessingAnswer = false;
+            const qData = state.questions[state.currentQuestionIndex];
+            state.questionStartTime = Date.now();
+
+            document.getElementById('question-text').innerText = qData.q;
+            ui.codeContainer.innerHTML = `<pre><code>${qData.code}</code></pre>`;
+
+            ui.inventory.innerHTML = '';
+            let shuffledOptions = shuffleArray([...qData.choices]);
+            shuffledOptions.forEach(opt => {
+                const block = document.createElement('div');
+                block.className = 'code-block';
+                block.dataset.value = opt;
+                block.innerText = opt;
+                block.addEventListener('mousedown', (e) => mouseDragStart(e, block));
+                ui.inventory.appendChild(block);
+            });
+
+            document.getElementById('progress-text').innerText = `${state.currentQuestionIndex + 1}/${state.totalQuestions}`;
+            const pct = ((state.currentQuestionIndex) / state.totalQuestions) * 100;
+            document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+            document.getElementById('score-display').innerText = state.score;
+        }
+
+        function evaluateDrop(block, dropZone) {
+            isProcessingAnswer = true;
+            const qData = state.questions[state.currentQuestionIndex];
+            const answerProvided = block.dataset.value;
+            const isCorrect = (answerProvided === qData.ans);
+            const timeSpent = Math.floor((Date.now() - state.questionStartTime) / 1000);
+
+            dropZone.innerText = answerProvided;
+            dropZone.classList.remove('active-target');
+            block.style.display = 'none'; 
+
+            if (isCorrect) {
+                dropZone.classList.add('filled-correct');
+                state.score += 100; 
+                if(timeSpent < 15) state.score += 30; // speed bonus
+                playCorrectSound(); 
+                showFeedback(true);
+            } else {
+                dropZone.classList.add('filled-wrong');
+                playWrongSound(); 
+                showFeedback(false);
+            }
+            
+            document.getElementById('score-display').innerText = state.score;
+
+            state.sessionData.push({
+                DateTime: new Date().toISOString(),
+                StudentID: state.studentId,
+                Question: qData.q,
+                Answer: answerProvided,
+                CorrectAnswer: qData.ans,
+                IsCorrect: isCorrect,
+                Score: state.score,
+                TimeSpent: timeSpent
+            });
+
+            setTimeout(() => {
+                document.getElementById('feedback-overlay').classList.add('hidden');
+                document.getElementById('feedback-overlay').classList.remove('flex');
+                
+                // Cleanup any orphaned blocks
+                document.querySelectorAll('body > .code-block').forEach(b => b.remove());
+                
+                state.currentQuestionIndex++;
+                loadQuestion();
+            }, 2000);
+        }
+
+        function showFeedback(isCorrect) {
+            const overlay = document.getElementById('feedback-overlay');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-text');
+            const sub = document.getElementById('feedback-subtext');
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            if(isCorrect) {
+                icon.innerHTML = '✓';
+                icon.className = 'w-28 h-28 rounded-full flex items-center justify-center mb-6 text-6xl bg-emerald-500 text-white animate-bounce shadow-[0_0_30px_rgba(16,185,129,0.8)]';
+                title.innerText = 'COMPILE SUCCESS';
+                title.className = 'text-5xl font-black text-emerald-400 mb-3 tracking-wide uppercase';
+                sub.innerText = 'Syntax & Logic verified.';
+            } else {
+                icon.innerHTML = '!';
+                icon.className = 'w-28 h-28 rounded-full flex items-center justify-center mb-6 text-6xl bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.8)]';
+                title.innerText = 'SYNTAX ERROR';
+                title.className = 'text-5xl font-black text-red-400 mb-3 tracking-wide uppercase';
+                sub.innerText = `Expected: ${state.questions[state.currentQuestionIndex].ans}`;
+            }
+        }
+
+        function endGame() {
+            clearInterval(state.timerInterval);
+            ui.game.classList.remove('flex');
+            ui.game.classList.add('hidden');
+            ui.result.classList.remove('hidden');
+            ui.result.classList.add('flex');
+
+            const correctCount = state.sessionData.filter(d => d.IsCorrect).length;
+            const acc = state.totalQuestions > 0 ? Math.round((correctCount / (state.currentQuestionIndex || 1)) * 100) : 0;
+
+            document.getElementById('res-student').innerText = state.studentId;
+            document.getElementById('res-score').innerText = state.score;
+            document.getElementById('res-accuracy').innerText = `${acc}%`;
+            document.getElementById('res-time').innerText = formatTime(state.totalTime);
+
+            sendDataToSheets();
+        }
+
+        function resetGame() {
+            ui.result.classList.remove('flex');
+            ui.result.classList.add('hidden');
+            ui.login.classList.remove('hidden');
+            ui.login.classList.add('flex');
+            document.getElementById('sync-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> Syncing to Cloud Database...';
+            document.getElementById('sync-status').className = "text-sm text-gray-400 mb-6 font-mono flex items-center gap-2";
+        }
+
+        async function sendDataToSheets() {
+            if (!APPS_SCRIPT_URL) {
+                document.getElementById('sync-status').innerHTML = "https://script.google.com/macros/s/AKfycbyq7vx5uJ_-vbZ4HfOhzxsVJI7vEx3YqCQ0T75CsndyrV_UxVMbEcNby9fcHHlO_8k/exec";
+                document.getElementById('sync-status').classList.replace('text-gray-400', 'text-yellow-400');
+                return;
+            }
+
+            const payload = {
+                event: "GAME_COMPLETE",
+                studentId: state.studentId,
+                totalScore: state.score,
+                totalTime: state.totalTime,
+                details: state.sessionData
+            };
+
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                document.getElementById('sync-status').innerHTML = "✅ Database Sync Complete";
+                document.getElementById('sync-status').classList.replace('text-gray-400', 'text-emerald-400');
+            } catch (error) {
+                console.error(error);
+                document.getElementById('sync-status').innerHTML = "❌ Sync Failed. Local Data Kept.";
+                document.getElementById('sync-status').classList.replace('text-gray-400', 'text-red-400');
+            }
+        }
+
+        // ==========================================
+        // MOUSE FALLBACK FOR NON-AR TESTING
+        // ==========================================
+        let isMouseDragging = false;
+        
+        function mouseDragStart(e, block) {
+            if(isProcessingAnswer) return;
+            isMouseDragging = true;
+            draggedBlock = block;
+            
+            initAudio().then(() => playGrabSound());
+
+            const rect = block.getBoundingClientRect();
+            block.style.width = `${rect.width}px`;
+            
+            document.body.appendChild(draggedBlock);
+            block.classList.add('dragging');
+            
+            moveMouseBlock(e);
+            
+            document.addEventListener('mousemove', moveMouseBlock);
+            document.addEventListener('mouseup', mouseDragEnd);
+        }
+
+        function moveMouseBlock(e) {
+            if(!isMouseDragging || !draggedBlock) return;
+            cursorX = e.clientX;
+            cursorY = e.clientY;
+            draggedBlock.style.left = `${cursorX}px`;
+            draggedBlock.style.top = `${cursorY}px`;
+            checkDropZoneHover();
+        }
+
+        function mouseDragEnd() {
+            if(!isMouseDragging) return;
+            isMouseDragging = false;
+            document.removeEventListener('mousemove', moveMouseBlock);
+            document.removeEventListener('mouseup', mouseDragEnd);
+            handlePinchEnd(); 
+        }
+
+        // ==========================================
+        // MANAGE QUESTIONS LOGIC
+        // ==========================================
+        
+        document.getElementById('open-manage-btn').addEventListener('click', () => {
+            initAudio(); // Initialize audio context just in case
+            document.getElementById('password-modal').classList.remove('hidden');
+            document.getElementById('password-modal').classList.add('flex');
+            document.getElementById('admin-password').value = '';
+            document.getElementById('password-error').classList.add('hidden');
+        });
+
+        document.getElementById('cancel-password-btn').addEventListener('click', () => {
+            document.getElementById('password-modal').classList.add('hidden');
+            document.getElementById('password-modal').classList.remove('flex');
+        });
+
+        document.getElementById('submit-password-btn').addEventListener('click', () => {
+            const pwd = document.getElementById('admin-password').value;
+            if (pwd === 'admin123') { // รหัสผ่านตั้งต้น
+                document.getElementById('password-modal').classList.add('hidden');
+                document.getElementById('password-modal').classList.remove('flex');
+                ui.login.classList.add('hidden');
+                ui.login.classList.remove('flex');
+                ui.manage.classList.remove('hidden');
+                ui.manage.classList.add('flex');
+                renderManageQuestions();
+            } else {
+                document.getElementById('password-error').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('close-manage-btn').addEventListener('click', () => {
+            ui.manage.classList.add('hidden');
+            ui.manage.classList.remove('flex');
+            ui.login.classList.remove('hidden');
+            ui.login.classList.add('flex');
+        });
+
+        function renderManageQuestions() {
+            const list = document.getElementById('q-list');
+            list.innerHTML = '';
+            document.getElementById('q-count').innerText = qBank.length;
+
+            qBank.forEach((q, index) => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-800 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center border border-slate-700 gap-4';
+                item.innerHTML = `
+                    <div class="flex-1 overflow-hidden w-full">
+                        <p class="text-white font-bold truncate text-sm md:text-base">${index + 1}. ${q.q}</p>
+                        <p class="text-xs text-emerald-400 font-mono mt-1 truncate">Ans: ${q.ans} | Choices: ${q.choices.join(', ')}</p>
+                    </div>
+                    <button class="bg-red-500/20 text-red-400 p-2 rounded-lg hover:bg-red-500 hover:text-white transition shrink-0 cursor-pointer" onclick="deleteQuestion(${index})">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // Global so it can be called from inline onclick
+        window.deleteQuestion = function(index) {
+            qBank.splice(index, 1);
+            renderManageQuestions();
+        }
+
+        document.getElementById('add-q-btn').addEventListener('click', () => {
+            const text = document.getElementById('new-q-text').value.trim();
+            const code = document.getElementById('new-q-code').value.trim();
+            const ans = document.getElementById('new-q-ans').value.trim();
+            const choicesRaw = document.getElementById('new-q-choices').value.trim();
+
+            if(!text || !code || !ans || !choicesRaw) {
+                const btn = document.getElementById('add-q-btn');
+                const origText = btn.innerText;
+                btn.innerText = "Error: Fill all fields!";
+                btn.classList.add('bg-red-500');
+                setTimeout(() => {
+                    btn.innerText = origText;
+                    btn.classList.remove('bg-red-500');
+                }, 2000);
+                return;
+            }
+
+            const choices = choicesRaw.split(',').map(c => c.trim()).filter(c => c);
+
+            qBank.push({
+                q: text,
+                ans: ans,
+                choices: choices,
+                code: code
+            });
+
+            document.getElementById('new-q-text').value = '';
+            document.getElementById('new-q-code').value = '';
+            document.getElementById('new-q-ans').value = '';
+            document.getElementById('new-q-choices').value = '';
+
+            renderManageQuestions();
+        });
+
+        // Excel Import Logic
+        document.getElementById('import-excel-btn').addEventListener('click', () => {
+            const fileInput = document.getElementById('excel-file');
+            const file = fileInput.files[0];
+            const btn = document.getElementById('import-excel-btn');
+            const origText = btn.innerText;
+
+            if (!file) {
+                btn.innerText = "Please select file!";
+                btn.classList.add('bg-red-500', 'text-white');
+                btn.classList.remove('bg-teal-500', 'text-slate-900');
+                setTimeout(() => {
+                    btn.innerText = origText;
+                    btn.classList.remove('bg-red-500', 'text-white');
+                    btn.classList.add('bg-teal-500', 'text-slate-900');
+                }, 2000);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+
+                    let importedCount = 0;
+                    json.forEach(row => {
+                        const q = row['Question'] || row['question'] || row['คำถาม'];
+                        const code = row['Code'] || row['code'] || row['โค้ด'];
+                        const ans = row['CorrectAnswer'] || row['correctanswer'] || row['คำตอบที่ถูก'];
+                        const choicesRaw = row['Choices'] || row['choices'] || row['ตัวเลือก'];
+
+                        if (q && code && ans && choicesRaw) {
+                            const choices = choicesRaw.toString().split(',').map(c => c.trim()).filter(c => c);
+                            qBank.push({
+                                q: q.toString(),
+                                code: code.toString(),
+                                ans: ans.toString(),
+                                choices: choices
+                            });
+                            importedCount++;
+                        }
+                    });
+
+                    if (importedCount > 0) {
+                        btn.innerText = `Success (${importedCount})`;
+                        renderManageQuestions();
+                    } else {
+                        btn.innerText = "No valid data!";
+                        btn.classList.add('bg-red-500', 'text-white');
+                        btn.classList.remove('bg-teal-500', 'text-slate-900');
+                    }
+                } catch (error) {
+                    console.error("Excel parse error:", error);
+                    btn.innerText = "Read Error!";
+                    btn.classList.add('bg-red-500', 'text-white');
+                    btn.classList.remove('bg-teal-500', 'text-slate-900');
+                }
+                
+                setTimeout(() => {
+                    btn.innerText = origText;
+                    btn.className = "bg-teal-500 text-slate-900 font-bold px-4 py-2 rounded-lg hover:bg-teal-400 transition cursor-pointer whitespace-nowrap";
+                    fileInput.value = ''; 
+                }, 3000);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Download CSV Template Logic
+        document.getElementById('download-template-btn').addEventListener('click', () => {
+            // Updated template content with fixed syntax highlighting and proper spacing
+            const csvContent = `Question,Code,CorrectAnswer,Choices\n"ลากคำสั่งตรวจสอบเงื่อนไขหลักไปเติมให้ถูกต้อง","<span class=""var"">age</span> = <span class=""num"">15</span>\\n<div class=""drop-zone"" data-target=""if""></div> <span class=""var"">age</span> >= <span class=""num"">18</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Adult'</span>)","if","if, elif, else"\n"หาผลลัพธ์: x = 10, y = 5 จะแสดงผลคำว่าอะไร?","<span class=""var"">x</span> = <span class=""num"">10</span>; <span class=""var"">y</span> = <span class=""num"">5</span>\\n<span class=""kw"">if</span> <span class=""var"">x</span> < <span class=""var"">y</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'A'</span>)\\n<span class=""kw"">else</span>:\\n    <div class=""drop-zone"" data-target=""print('B')""></div>","print('B')","print('B'), print('A'), print('C')"\n"ผู้เล่นอายุน้อยกว่า 13 ห้ามเล่น เติมตัวดำเนินการที่เหมาะสม","<span class=""kw"">if</span> <span class=""var"">age</span> <div class=""drop-zone"" data-target=""<""></div> <span class=""num"">13</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Not allowed'</span>)","<","<, <=, >, =="\n"โปรแกรมทายตัวเลข โค้ดส่วนใดหายไป?","<span class=""kw"">if</span> <span class=""var"">guess</span> > <span class=""var"">ans</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Too high'</span>)\\n<div class=""drop-zone"" data-target=""elif""></div> <span class=""var"">guess</span> < <span class=""var"">ans</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Too low'</span>)","elif","elif, else, if"`;
+            
+            // Add BOM (Byte Order Mark) to ensure Excel opens it as UTF-8 properly
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "python_ar_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+    </script>
+</body>
+</html>
