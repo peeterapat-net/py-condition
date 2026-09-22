@@ -7,6 +7,56 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            cyan: '#00F0FF',
+                            pink: '#FF003C',
+                            dark: '#050B14',
+                            glass: 'rgba(10, 15, 30, 0.65)'
+                        }
+                    },
+                    animation: {
+                        'gradient-x': 'gradient-x 3s ease infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            },
+                        },
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1, filter: 'brightness(1)' },
+                            '50%': { opacity: .8, filter: 'brightness(1.5)' },
+                        },
+                        'slideUp': {
+                            '0%': { opacity: 0, transform: 'translateY(20px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- MediaPipe Hands -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -21,16 +71,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --mint: #6EE7B7;
             --emerald: #10B981;
+            --cyan: #00F0FF;
             --yellow: #FDE68A;
+            --gold: #F59E0B;
             --white: #FFFBF5;
             --slate: #334155;
-            --bg-dark: #0f172a;
+            --bg-dark: #050B14;
         }
         
         body {
@@ -46,6 +98,23 @@
 
         .code-font {
             font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar for premium feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 240, 255, 0.5);
         }
 
         /* Video and Canvas Setup */
@@ -64,7 +133,16 @@
             height: 100%;
             object-fit: cover;
             transform: scaleX(-1);
-            filter: brightness(0.4) blur(4px);
+            filter: brightness(0.3) contrast(1.2) blur(3px) saturate(0.8);
+        }
+
+        /* Vignette Overlay to make center UI pop */
+        .vignette {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, rgba(5, 11, 20, 0.8) 100%);
+            z-index: 1;
+            pointer-events: none;
         }
 
         #output_canvas {
@@ -89,160 +167,231 @@
             pointer-events: none;
         }
 
+        /* Premium Glass Panel */
         .glass-panel {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(110, 231, 183, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(20px) saturate(120%);
+            -webkit-backdrop-filter: blur(20px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(0, 240, 255, 0.02);
             pointer-events: auto;
+        }
+
+        /* Input Fields Premium */
+        .premium-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+        .premium-input:focus {
+            border-color: var(--cyan);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 0 15px rgba(0, 240, 255, 0.3);
+            outline: none;
         }
 
         /* AR Cursor */
         #ar-cursor {
             position: fixed;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 3px solid var(--mint);
-            background-color: rgba(110, 231, 183, 0.2);
+            border: 2px solid var(--cyan);
+            background-color: rgba(0, 240, 255, 0.15);
             transform: translate(-50%, -50%);
             z-index: 9999;
             pointer-events: none;
-            transition: transform 0.1s ease-out, background-color 0.1s, width 0.1s, height 0.1s;
-            box-shadow: 0 0 15px var(--mint);
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        background-color 0.15s, width 0.15s, height 0.15s, border-width 0.15s;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.6), inset 0 0 10px rgba(0, 240, 255, 0.4);
             display: none;
         }
-
+        #ar-cursor::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 4px; height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
         #ar-cursor.pinching {
-            width: 20px;
-            height: 20px;
-            background-color: var(--yellow);
-            border-color: var(--yellow);
-            box-shadow: 0 0 25px var(--yellow);
+            width: 18px;
+            height: 18px;
+            background-color: var(--gold);
+            border-color: #fff;
+            border-width: 3px;
+            box-shadow: 0 0 30px var(--gold), inset 0 0 15px var(--gold);
         }
 
         /* Interactive Elements */
         .ar-btn {
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             cursor: pointer;
             pointer-events: auto;
+            position: relative;
+            overflow: hidden;
         }
-        .ar-btn.hovered {
-            transform: scale(1.05);
-            border-color: var(--mint);
-            box-shadow: 0 0 15px rgba(110, 231, 183, 0.5);
+        .ar-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(45deg) translateY(-100%);
+            transition: transform 0.6s;
+        }
+        .ar-btn:hover::after {
+            transform: rotate(45deg) translateY(100%);
+        }
+        .ar-btn.hovered, .ar-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px -5px rgba(0, 240, 255, 0.4);
         }
 
-        /* Code Editor Style */
+        /* Code Editor Style - Premium Modern IDE */
         .editor-window {
-            background: #1e1e1e;
-            border-radius: 12px;
-            border: 1px solid #333;
+            background: #0d1117; /* GitHub Dark dim */
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
+            position: relative;
+        }
+        .editor-window::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.5), transparent);
         }
         .editor-header {
-            background: #2d2d2d;
-            padding: 8px 16px;
+            background: #161b22;
+            padding: 12px 20px;
             display: flex;
-            gap: 6px;
+            gap: 8px;
             align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .mac-btn { width: 12px; height: 12px; border-radius: 50%; }
-        .mac-red { background: #ff5f56; }
-        .mac-yellow { background: #ffbd2e; }
-        .mac-green { background: #27c93f; }
+        .mac-btn { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 1px 2px rgba(255,255,255,0.3); }
+        .mac-red { background: #ff5f56; border: 1px solid #e0443e; }
+        .mac-yellow { background: #ffbd2e; border: 1px solid #dea123; }
+        .mac-green { background: #27c93f; border: 1px solid #1aab29; }
+        .editor-title {
+            margin-left: 12px; font-size: 0.75rem; color: #8b949e; letter-spacing: 0.05em;
+        }
 
         /* Drag & Drop Blocks */
         .drop-zone {
             display: inline-block;
-            min-width: 80px;
-            height: 36px;
-            border: 2px dashed #64748b;
+            min-width: 90px;
+            height: 40px;
+            border: 2px dashed rgba(100, 116, 139, 0.6);
             border-radius: 8px;
-            background: rgba(100, 116, 139, 0.2);
+            background: rgba(15, 23, 42, 0.4);
             vertical-align: middle;
-            margin: 0 5px;
-            transition: all 0.2s;
+            margin: 0 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
         }
         .drop-zone.active-target {
-            border-color: var(--yellow);
-            background: rgba(253, 230, 138, 0.3);
-            box-shadow: 0 0 15px rgba(253, 230, 138, 0.5);
+            border-color: var(--cyan);
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5), 0 0 20px rgba(0, 240, 255, 0.4);
+            transform: scale(1.05);
         }
         .drop-zone.filled-correct {
             border-color: var(--emerald);
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.15);
             color: var(--emerald);
             border-style: solid;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
         }
         .drop-zone.filled-wrong {
             border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.15);
             color: #ef4444;
             border-style: solid;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
         }
 
         .code-block {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #334155, #1e293b);
-            border: 2px solid #475569;
-            border-radius: 8px;
-            color: var(--mint);
+            padding: 10px 20px;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.25);
+            border-radius: 10px;
+            color: var(--cyan);
             font-family: 'JetBrains Mono', monospace;
-            font-weight: bold;
-            font-size: 1.1rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            font-weight: 800;
+            font-size: 1.15rem;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
             pointer-events: auto;
             user-select: none;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: grab;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         
-        .code-block.hovered {
-            border-color: var(--yellow);
-            box-shadow: 0 0 15px rgba(253, 230, 138, 0.4);
-            transform: translateY(-2px);
+        .code-block.hovered, .code-block:hover {
+            border-color: var(--cyan);
+            box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+            transform: translateY(-4px) scale(1.05);
+            color: #fff;
+            text-shadow: 0 0 8px var(--cyan);
         }
 
         .code-block.dragging {
             position: fixed !important;
             z-index: 10000;
             pointer-events: none;
-            transform: translate(-50%, -50%) scale(1.1);
-            border-color: var(--mint);
-            box-shadow: 0 10px 25px rgba(110, 231, 183, 0.6);
-            background: #1e293b;
+            transform: translate(-50%, -50%) scale(1.15) rotate(2deg);
+            border-color: var(--gold);
+            color: var(--gold);
+            box-shadow: 0 20px 40px rgba(245, 158, 11, 0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+            background: linear-gradient(145deg, #27272a, #18181b);
             cursor: grabbing;
         }
 
-        /* Syntax Highlighting */
-        .kw { color: #c678dd; } /* keyword */
-        .op { color: #56b6c2; } /* operator */
-        .str { color: #98c379; } /* string */
-        .var { color: #e06c75; } /* variable */
-        .num { color: #d19a66; } /* number */
-        .fn { color: #61afef; } /* function */
+        /* Syntax Highlighting (One Dark Pro inspired) */
+        .kw { color: #c678dd; text-shadow: 0 0 8px rgba(198,120,221,0.4); } 
+        .op { color: #56b6c2; } 
+        .str { color: #98c379; text-shadow: 0 0 8px rgba(152,195,121,0.4); } 
+        .var { color: #e5c07b; } 
+        .num { color: #d19a66; } 
+        .fn { color: #61afef; text-shadow: 0 0 8px rgba(97,175,239,0.4); } 
 
         .loader {
-            border: 4px solid rgba(255, 251, 245, 0.1);
-            border-left-color: var(--mint);
+            border: 4px solid rgba(0, 240, 255, 0.1);
+            border-left-color: var(--cyan);
             border-radius: 50%;
             width: 50px;
             height: 50px;
-            animation: spin 1s linear infinite;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Background grid for Editor */
+        .bg-grid {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
     </style>
 </head>
 <body>
 
     <div class="video-container">
         <video id="webcam" autoplay playsinline></video>
+        <div class="vignette"></div>
         <canvas id="output_canvas"></canvas>
     </div>
 
@@ -251,123 +400,176 @@
 
     <div id="ui-layer" class="p-4 md:p-8 justify-center items-center">
         
-        <div id="loading-screen" class="glass-panel w-full max-w-md p-10 rounded-3xl text-center flex flex-col items-center shadow-2xl">
-            <h1 class="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">AR Code Engine</h1>
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="glass-panel w-full max-w-md p-10 rounded-[2rem] text-center flex flex-col items-center animate-slide-up">
+            <div class="relative mb-8">
+                <div class="absolute inset-0 bg-cyan-500 blur-xl opacity-20 rounded-full animate-pulse-glow"></div>
+                <h1 class="relative text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]">
+                    CODE ENGINE
+                </h1>
+            </div>
             <div class="loader mb-6"></div>
-            <p class="text-gray-300 font-semibold mb-2">กำลังเชื่อมต่อกล้องและระบบ AI...</p>
-            <p class="text-xs text-teal-200">กรุณาอนุญาตการเข้าถึงกล้องเว็บแคม</p>
+            <p class="text-cyan-100 font-semibold mb-2 tracking-wide text-sm uppercase">Initializing Neural Link...</p>
+            <p class="text-xs text-slate-400">Awaiting Camera Permission</p>
         </div>
 
-        <div id="login-screen" class="glass-panel w-full max-w-lg p-8 rounded-3xl hidden flex-col items-center">
-            <div class="bg-emerald-500/20 p-4 rounded-2xl mb-4 border border-emerald-500/50">
-                <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+        <!-- Login Screen -->
+        <div id="login-screen" class="glass-panel w-full max-w-lg p-8 rounded-[2rem] hidden flex-col items-center animate-slide-up relative overflow-hidden">
+            <!-- Decorative Glow -->
+            <div class="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/20 blur-[50px] rounded-full pointer-events-none"></div>
+            <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-purple-500/20 blur-[50px] rounded-full pointer-events-none"></div>
+
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl mb-4 border border-white/10 shadow-lg relative group">
+                <div class="absolute inset-0 bg-cyan-400/20 blur-md rounded-2xl opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                <svg class="relative w-12 h-12 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
             </div>
-            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-300 mb-2 text-center">Python AR</h1>
-            <h2 class="text-xl font-bold text-white tracking-widest mb-6">CONDITION QUEST</h2>
             
-            <div class="w-full mb-6 pointer-events-auto">
-                <label class="block text-emerald-400 font-semibold mb-2 text-sm">STUDENT ID</label>
-                <input type="text" id="student-id" class="w-full bg-slate-900/80 border-2 border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-400 transition" placeholder="ระบุรหัสนักเรียนของคุณ...">
+            <h1 class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-300 to-yellow-300 mb-1 text-center drop-shadow-sm">Python AR</h1>
+            <h2 class="text-sm font-bold text-slate-300 tracking-[0.3em] uppercase mb-8">Condition Quest</h2>
+            
+            <div class="w-full mb-6 pointer-events-auto relative">
+                <label class="block text-cyan-400 font-bold mb-2 text-xs uppercase tracking-wider ml-1">Developer ID</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <input type="text" id="student-id" class="premium-input w-full rounded-xl pl-11 pr-4 py-3.5 text-white text-lg font-mono placeholder-slate-500" placeholder="Enter your ID...">
+                </div>
             </div>
 
-            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 mb-6 text-sm text-gray-300 w-full shadow-inner">
-                <p class="font-bold text-yellow-300 mb-2 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
-                    AR Drag & Drop Mode:
+            <div class="bg-slate-900/80 p-5 rounded-xl border border-white/5 mb-8 text-sm text-slate-300 w-full shadow-inner relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-purple-500"></div>
+                <p class="font-bold text-cyan-300 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                    AR Interaction Protocol
                 </p>
-                <ul class="list-disc pl-5 space-y-1">
-                    <li>ใช้ <b>นิ้วชี้</b> เล็งไปที่บล็อกโค้ดด้านล่าง (หรือใช้เมาส์)</li>
-                    <li><b>จีบนิ้ว</b> (นิ้วชี้+โป้ง) ค้างไว้เพื่อ <b>หยิบ</b> บล็อกโค้ด</li>
-                    <li><b>ลาก</b> ไปใส่ใน <b>[ ช่องว่าง ]</b> ใน Editor แล้วปล่อยนิ้ว</li>
+                <ul class="list-none space-y-2 text-xs leading-relaxed ml-1">
+                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> ใช้ <b>นิ้วชี้</b> เล็งพอยน์เตอร์ไปที่บล็อกโค้ดด้านล่าง</li>
+                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> <b>จีบนิ้ว</b> (นิ้วชี้+โป้ง) ค้างไว้เพื่อ <b>หยิบ</b> บล็อกโค้ด</li>
+                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> <b>ลาก</b> ไปใส่ใน <b>[ ช่องว่าง ]</b> แล้วปล่อยนิ้ว</li>
                 </ul>
             </div>
 
-            <button id="start-btn" class="ar-btn w-full bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-900 font-extrabold text-xl py-4 rounded-xl shadow-[0_0_20px_rgba(52,211,153,0.5)] uppercase tracking-wider mb-4">
+            <button id="start-btn" class="ar-btn w-full bg-gradient-to-r from-cyan-500 to-emerald-400 text-slate-950 font-black text-xl py-4 rounded-xl shadow-[0_0_20px_rgba(0,240,255,0.4)] uppercase tracking-widest mb-4 border-b-4 border-emerald-600 active:border-b-0 active:mt-1">
                 Initialize Quest
             </button>
 
             <div class="flex w-full gap-3">
-                <button id="open-leaderboard-btn" class="ar-btn flex-1 bg-yellow-400/90 text-slate-900 font-bold text-lg py-3 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.5)] hover:bg-yellow-300 transition-colors flex justify-center items-center gap-2 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    Leaderboard
+                <button id="open-leaderboard-btn" class="ar-btn flex-1 bg-slate-800/80 text-white font-bold text-sm py-3 rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-slate-700 transition-colors flex justify-center items-center gap-2 cursor-pointer shadow-lg">
+                    <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    RANKINGS
                 </button>
 
-                <button id="open-manage-btn" class="ar-btn flex-1 bg-slate-800 text-emerald-400 font-bold text-lg py-3 rounded-xl border-2 border-emerald-500/50 hover:bg-emerald-500/10 transition-colors flex justify-center items-center gap-2 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Manage
+                <button id="open-manage-btn" class="ar-btn flex-1 bg-slate-800/80 text-white font-bold text-sm py-3 rounded-xl border border-white/10 hover:border-purple-400/50 hover:bg-slate-700 transition-colors flex justify-center items-center gap-2 cursor-pointer shadow-lg">
+                    <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    ADMIN
                 </button>
             </div>
         </div>
 
-        <div id="password-modal" class="absolute inset-0 z-50 hidden flex-col justify-center items-center bg-slate-900/90 backdrop-blur-md pointer-events-auto">
-            <div class="glass-panel p-8 rounded-2xl w-full max-w-sm flex flex-col items-center shadow-2xl border border-teal-500/30">
-                <h3 class="text-2xl font-bold text-white mb-2">Admin Access</h3>
-                <p class="text-sm text-gray-400 mb-6 text-center">กรุณาใส่รหัสผ่านเพื่อจัดการคำถาม</p>
-                <input type="password" id="admin-password" class="w-full bg-slate-900/80 border-2 border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition mb-4 text-center" placeholder="รหัสผ่าน...">
-                <p id="password-error" class="text-red-400 text-sm mb-4 hidden">รหัสผ่านไม่ถูกต้อง!</p>
+        <!-- Admin Password Modal -->
+        <div id="password-modal" class="absolute inset-0 z-50 hidden flex-col justify-center items-center bg-slate-950/90 backdrop-blur-md pointer-events-auto transition-opacity">
+            <div class="glass-panel p-8 rounded-2xl w-full max-w-sm flex flex-col items-center shadow-2xl border border-purple-500/30">
+                <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mb-4 border border-purple-500/50 text-purple-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h3 class="text-2xl font-black text-white mb-2 uppercase tracking-wide">System Auth</h3>
+                <p class="text-xs text-purple-200/70 mb-6 text-center uppercase tracking-widest">Administrator Access Required</p>
+                <input type="password" id="admin-password" class="premium-input w-full rounded-xl px-4 py-3 text-white text-center font-mono mb-4 placeholder-slate-600" placeholder="••••••••">
+                <p id="password-error" class="text-red-400 text-xs font-bold mb-4 hidden bg-red-500/10 py-2 px-4 rounded border border-red-500/30 w-full text-center">ACCESS DENIED</p>
                 <div class="flex w-full gap-3">
-                    <button id="cancel-password-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-xl font-bold hover:bg-slate-600 transition cursor-pointer">ยกเลิก</button>
-                    <button id="submit-password-btn" class="flex-1 bg-teal-500 text-slate-900 py-3 rounded-xl font-bold hover:bg-teal-400 transition cursor-pointer">ยืนยัน</button>
+                    <button id="cancel-password-btn" class="flex-1 bg-slate-800 text-slate-300 py-3 rounded-xl font-bold border border-slate-600 hover:bg-slate-700 transition cursor-pointer text-sm">CANCEL</button>
+                    <button id="submit-password-btn" class="flex-1 bg-purple-600 text-white py-3 rounded-xl font-bold border-b-4 border-purple-800 hover:bg-purple-500 active:border-b-0 active:mt-1 transition cursor-pointer text-sm shadow-[0_0_15px_rgba(168,85,247,0.4)]">AUTHORIZE</button>
                 </div>
             </div>
         </div>
 
-        <div id="game-screen" class="w-full h-full hidden flex-col relative pointer-events-none">
+        <div id="game-screen" class="w-full h-full hidden flex-col relative pointer-events-none animate-slide-up">
             
-            <!-- HUD -->
-            <div class="flex justify-between items-start w-full max-w-6xl mx-auto pointer-events-auto mt-4 px-4">
-                <div class="glass-panel px-6 py-3 rounded-2xl flex items-center gap-6">
+            <!-- HUD Top Bar -->
+            <div class="flex justify-between items-start w-full max-w-7xl mx-auto pointer-events-auto mt-2 px-4">
+                
+                <!-- Left Stats -->
+                <div class="glass-panel px-6 py-3 rounded-2xl flex items-center gap-6 relative overflow-hidden border-t border-cyan-500/30">
+                    <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
                     <div>
-                        <p class="text-[10px] text-teal-400 font-bold uppercase tracking-widest">Score</p>
-                        <p id="score-display" class="text-2xl font-black text-yellow-300 font-mono">0</p>
+                        <p class="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.2em] mb-1">Score</p>
+                        <p id="score-display" class="text-3xl font-black text-yellow-300 font-mono drop-shadow-[0_0_8px_rgba(253,230,138,0.5)]">0</p>
                     </div>
-                    <div class="w-px h-8 bg-slate-600"></div>
+                    <div class="w-px h-10 bg-slate-700"></div>
                     <div>
-                        <p class="text-[10px] text-teal-400 font-bold uppercase tracking-widest">Time</p>
-                        <p id="time-display" class="text-2xl font-bold text-white font-mono">00:00</p>
+                        <p class="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.2em] mb-1">Time</p>
+                        <p id="time-display" class="text-3xl font-black text-white font-mono drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">00:00</p>
                     </div>
-                    <div class="w-px h-8 bg-slate-600"></div>
-                    <button id="abort-btn" class="bg-red-500/20 text-red-400 border border-red-500 rounded-lg px-4 py-2 font-bold hover:bg-red-500 hover:text-white transition-colors cursor-pointer pointer-events-auto">
-                        Abort Mission
+                    <div class="w-px h-10 bg-slate-700 hidden md:block"></div>
+                    <button id="abort-btn" class="hidden md:flex bg-red-500/10 text-red-400 border border-red-500/50 rounded-lg px-4 py-2 font-bold hover:bg-red-500 hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-wider items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        Abort
                     </button>
                 </div>
                 
-                <div class="glass-panel px-6 py-3 rounded-2xl flex flex-col items-end">
-                    <p class="text-[10px] text-teal-400 font-bold uppercase tracking-widest mb-1">Compilation Progress</p>
-                    <div class="flex items-center gap-3">
-                        <p id="progress-text" class="font-bold text-white font-mono text-sm">1/10</p>
-                        <div class="w-32 md:w-48 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-600">
-                            <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-teal-400 to-emerald-400 w-0% transition-all duration-300"></div>
+                <!-- Right Progress -->
+                <div class="glass-panel px-6 py-4 rounded-2xl flex flex-col items-end border-t border-emerald-500/30">
+                    <div class="flex justify-between w-full mb-1">
+                        <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.2em]">Compile Status</p>
+                        <p id="progress-text" class="font-bold text-white font-mono text-xs bg-slate-800 px-2 rounded">1/10</p>
+                    </div>
+                    <div class="w-32 md:w-56 h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-700 shadow-inner relative">
+                        <!-- Striped animated background -->
+                        <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 w-0 transition-all duration-500 relative overflow-hidden shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSJ0cmFuc3BhcmVudCIvPgo8cGF0aCBkPSJNMCAwTDggOFoiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjIpIiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+')] opacity-50"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Workspace -->
-            <div class="flex-1 flex flex-col justify-center items-center w-full max-w-4xl mx-auto p-4 pointer-events-none gap-6 mt-8">
+            <!-- Workspace Area -->
+            <div class="flex-1 flex flex-col justify-center items-center w-full max-w-4xl mx-auto p-4 pointer-events-none gap-6 mt-4">
                 
-                <!-- Instruction -->
-                <div class="glass-panel w-full px-6 py-4 rounded-2xl pointer-events-auto flex items-center gap-4">
-                    <h2 class="text-lg md:text-xl font-bold text-white" id="question-text">ลากคำสั่งที่ถูกต้องไปเติมในช่องว่าง</h2>
+                <!-- Instruction Panel -->
+                <div class="glass-panel w-full px-8 py-5 rounded-2xl pointer-events-auto flex flex-col md:flex-row items-start md:items-center justify-between border-l-4 border-l-cyan-500 shadow-lg relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                        <svg class="w-16 h-16 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.2em] mb-1">Current Task</p>
+                        <h2 class="text-lg md:text-xl font-black text-white tracking-wide" id="question-text">ลากคำสั่งที่ถูกต้องไปเติมในช่องว่าง</h2>
+                    </div>
                 </div>
 
-                <!-- Code Editor -->
+                <!-- Code Editor (Modern IDE Style) -->
                 <div class="editor-window w-full pointer-events-auto flex flex-col">
                     <div class="editor-header">
                         <div class="mac-btn mac-red"></div>
                         <div class="mac-btn mac-yellow"></div>
                         <div class="mac-btn mac-green"></div>
-                        <span class="ml-4 text-xs text-gray-500 font-mono">main.py</span>
+                        <span class="editor-title flex items-center gap-2">
+                            <svg class="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.553.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c1.68 0 3.282.515 4.75 1.407a.75.75 0 001-.707V4.26a.75.75 0 00-.5-.707A9.735 9.735 0 0020 3a9.707 9.707 0 00-5.25 1.533v16.103z"></path></svg>
+                            main.py
+                        </span>
+                        <div class="ml-auto flex gap-2">
+                            <span class="text-[10px] text-slate-500 font-mono">Python 3.10</span>
+                        </div>
                     </div>
-                    <div class="p-6 bg-[#1e1e1e] min-h-[200px] flex items-center text-lg md:text-xl code-font leading-loose" id="code-container">
-                        <!-- Code content injected here -->
+                    <div class="p-8 bg-grid min-h-[220px] flex items-center text-lg md:text-xl code-font leading-[2] relative" id="code-container">
+                        <!-- Line Numbers (Decorative) -->
+                        <div class="absolute left-0 top-0 bottom-0 w-12 bg-[#161b22] border-r border-white/5 flex flex-col items-end pt-8 pr-3 text-slate-600 text-sm select-none">
+                            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                        </div>
+                        <div class="pl-10 w-full" id="code-content">
+                            <!-- Code injected here -->
+                        </div>
                     </div>
                 </div>
 
                 <!-- Draggable Blocks Inventory -->
-                <div class="w-full glass-panel p-6 rounded-2xl pointer-events-auto flex flex-col items-center">
-                    <p class="text-xs text-gray-400 uppercase tracking-widest mb-4 font-bold">Available Code Blocks</p>
-                    <div id="blocks-inventory" class="flex flex-wrap justify-center gap-4">
+                <div class="w-full glass-panel p-6 rounded-2xl pointer-events-auto flex flex-col items-center border-b-4 border-b-slate-700">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <p class="text-xs text-slate-300 uppercase tracking-[0.2em] font-bold">Component Library</p>
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-75"></span>
+                    </div>
+                    <div id="blocks-inventory" class="flex flex-wrap justify-center gap-5 w-full">
                         <!-- Blocks injected here -->
                     </div>
                 </div>
@@ -375,130 +577,163 @@
             </div>
             
             <!-- Feedback Overlay -->
-            <div id="feedback-overlay" class="absolute inset-0 z-50 hidden flex-col justify-center items-center bg-slate-900/90 backdrop-blur-md">
-                <div id="feedback-icon" class="w-28 h-28 rounded-full flex items-center justify-center mb-6 text-6xl shadow-2xl"></div>
-                <h2 id="feedback-text" class="text-5xl font-black text-white mb-3 tracking-wide"></h2>
-                <p id="feedback-subtext" class="text-xl text-gray-300 font-mono"></p>
+            <div id="feedback-overlay" class="absolute inset-0 z-50 hidden flex-col justify-center items-center bg-slate-950/90 backdrop-blur-lg">
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/40 via-slate-900/90 to-slate-950"></div>
+                
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="feedback-glow" class="absolute inset-0 blur-[80px] rounded-full z-0 pointer-events-none"></div>
+                    <div id="feedback-icon" class="relative z-10 w-32 h-32 rounded-full flex items-center justify-center mb-6 text-7xl shadow-2xl border-4"></div>
+                    <h2 id="feedback-text" class="relative z-10 text-6xl font-black text-white mb-4 tracking-widest drop-shadow-2xl text-center uppercase"></h2>
+                    <p id="feedback-subtext" class="relative z-10 text-2xl text-gray-200 font-mono font-bold bg-slate-900/50 px-6 py-2 rounded-lg border border-white/10"></p>
+                </div>
             </div>
         </div>
 
-        <div id="result-screen" class="glass-panel w-full max-w-lg p-10 rounded-3xl hidden flex-col items-center pointer-events-auto">
-            <h1 class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-300 mb-2 text-center uppercase tracking-tight">Mission<br>Complete</h1>
-            <p class="text-gray-400 mb-8 font-mono">Performance Report Generated</p>
+        <!-- Result Screen -->
+        <div id="result-screen" class="glass-panel w-full max-w-xl p-10 rounded-[2rem] hidden flex-col items-center pointer-events-auto animate-slide-up relative overflow-hidden border border-yellow-500/30">
+            <!-- Celebration Glow -->
+            <div class="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-yellow-500/20 to-transparent pointer-events-none"></div>
             
-            <div class="w-full bg-slate-900/80 rounded-2xl p-6 mb-8 border border-slate-700 shadow-inner">
-                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-                    <span class="text-gray-400 font-mono text-sm">Developer ID:</span>
-                    <span id="res-student" class="font-bold text-teal-400 text-lg"></span>
+            <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.6)] mb-6 border-4 border-yellow-200 text-white">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+            </div>
+            
+            <h1 class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-500 mb-2 text-center uppercase tracking-tight drop-shadow-lg">Mission<br>Complete</h1>
+            <p class="text-cyan-200/80 mb-8 font-mono text-sm uppercase tracking-widest bg-cyan-900/30 px-4 py-1 rounded-full border border-cyan-500/20">Performance Report Generated</p>
+            
+            <div class="w-full bg-slate-950/60 rounded-2xl p-6 mb-8 border border-white/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-4">
+                    <span class="text-slate-400 font-mono text-xs uppercase tracking-widest flex items-center gap-2"><svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Developer ID</span>
+                    <span id="res-student" class="font-black text-cyan-400 text-xl tracking-wider"></span>
                 </div>
-                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-                    <span class="text-gray-400 font-mono text-sm">Total Score:</span>
-                    <span class="font-black text-yellow-300 text-4xl"><span id="res-score"></span></span>
+                <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-4">
+                    <span class="text-slate-400 font-mono text-xs uppercase tracking-widest flex items-center gap-2"><svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Total Score</span>
+                    <span class="font-black text-yellow-400 text-5xl drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]"><span id="res-score"></span></span>
                 </div>
-                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-                    <span class="text-gray-400 font-mono text-sm">Code Accuracy:</span>
-                    <span id="res-accuracy" class="font-bold text-white text-xl"></span>
+                <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-4">
+                    <span class="text-slate-400 font-mono text-xs uppercase tracking-widest">Code Accuracy</span>
+                    <span id="res-accuracy" class="font-black text-white text-2xl"></span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-gray-400 font-mono text-sm">Execution Time:</span>
-                    <span id="res-time" class="font-bold text-white text-xl"></span>
+                    <span class="text-slate-400 font-mono text-xs uppercase tracking-widest">Execution Time</span>
+                    <span id="res-time" class="font-black text-emerald-400 text-2xl font-mono"></span>
                 </div>
             </div>
 
-            <p id="sync-status" class="text-sm text-gray-400 mb-6 font-mono flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> Syncing to Cloud Database...
+            <p id="sync-status" class="text-xs text-slate-400 mb-6 font-mono flex items-center gap-2 uppercase tracking-wider bg-slate-900/50 px-4 py-2 rounded border border-white/5">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Syncing to Neural Net...
             </p>
 
-            <div class="flex w-full gap-3">
-                <button id="res-leaderboard-btn" class="ar-btn flex-1 bg-yellow-400/90 text-slate-900 font-bold text-lg py-4 rounded-xl border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)] hover:bg-yellow-300 transition-colors cursor-pointer uppercase tracking-widest">
-                    Leaderboard
+            <div class="flex w-full gap-4">
+                <button id="res-leaderboard-btn" class="ar-btn flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-950 font-black text-lg py-4 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:brightness-110 transition-all cursor-pointer uppercase tracking-widest flex justify-center items-center gap-2 border-b-4 border-amber-700 active:border-b-0 active:mt-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Rankings
                 </button>
-                <button id="restart-btn" class="ar-btn flex-1 bg-slate-800 text-white font-bold text-lg py-4 rounded-xl border-2 border-slate-600 hover:border-teal-400 uppercase tracking-widest transition-colors cursor-pointer">
+                <button id="restart-btn" class="ar-btn flex-1 bg-slate-800 text-white font-black text-lg py-4 rounded-xl border border-white/10 hover:bg-slate-700 hover:border-cyan-400 shadow-lg uppercase tracking-widest transition-all cursor-pointer flex justify-center items-center gap-2 border-b-4 border-slate-900 active:border-b-0 active:mt-1">
+                    <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Reboot
                 </button>
             </div>
         </div>
 
         <!-- Leaderboard Screen -->
-        <div id="leaderboard-screen" class="glass-panel w-full max-w-2xl p-8 rounded-3xl hidden flex-col items-center pointer-events-auto">
-            <div class="w-full flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-extrabold text-yellow-300 tracking-wider flex items-center gap-3">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    GLOBAL LEADERBOARD
+        <div id="leaderboard-screen" class="glass-panel w-full max-w-3xl p-8 rounded-[2rem] hidden flex-col items-center pointer-events-auto animate-slide-up border border-yellow-500/20">
+            <div class="w-full flex justify-between items-center mb-8 pb-4 border-b border-white/10">
+                <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 tracking-wider flex items-center gap-3 drop-shadow-sm">
+                    <svg class="w-8 h-8 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                    GLOBAL RANKINGS
                 </h2>
-                <button id="close-leaderboard-btn" class="text-gray-400 hover:text-white transition cursor-pointer">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button id="close-leaderboard-btn" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all cursor-pointer border border-white/10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             
-            <div class="w-full bg-slate-900/80 rounded-2xl p-4 border border-slate-700 shadow-inner">
-                <div class="grid grid-cols-12 gap-2 p-2 border-b border-slate-700 mb-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
+            <div class="w-full bg-slate-950/80 rounded-2xl p-2 border border-white/5 shadow-inner">
+                <div class="grid grid-cols-12 gap-2 p-4 border-b border-white/5 text-xs font-bold text-cyan-500 uppercase tracking-widest bg-slate-900/50 rounded-t-xl">
                     <div class="col-span-2 text-center">Rank</div>
-                    <div class="col-span-4">Developer ID</div>
-                    <div class="col-span-3 text-right">Score</div>
-                    <div class="col-span-3 text-right">Time</div>
+                    <div class="col-span-4">Dev ID</div>
+                    <div class="col-span-3 text-right text-yellow-400">Score</div>
+                    <div class="col-span-3 text-right text-emerald-400">Time</div>
                 </div>
-                <div id="leaderboard-list" class="flex flex-col gap-2 min-h-[250px] max-h-[50vh] overflow-y-auto">
+                <div id="leaderboard-list" class="flex flex-col gap-1 p-2 min-h-[250px] max-h-[50vh] overflow-y-auto premium-scroll">
                     <!-- Leaderboard items injected here -->
                 </div>
             </div>
         </div>
 
-        <div id="manage-screen" class="glass-panel w-full max-w-4xl p-8 rounded-3xl hidden flex-col items-center max-h-[90vh] overflow-y-auto pointer-events-auto">
-            <div class="w-full flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-extrabold text-emerald-400">Question Database</h2>
-                <button id="close-manage-btn" class="text-gray-400 hover:text-white transition cursor-pointer">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <!-- Manage Screen -->
+        <div id="manage-screen" class="glass-panel w-full max-w-5xl p-8 rounded-[2rem] hidden flex-col items-center max-h-[90vh] overflow-hidden pointer-events-auto animate-slide-up border border-purple-500/30 relative">
+            
+            <!-- Sticky Header -->
+            <div class="w-full flex justify-between items-center mb-6 shrink-0 border-b border-white/10 pb-4">
+                <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 tracking-wider flex items-center gap-3">
+                    <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                    DATABASE ADMIN
+                </h2>
+                <button id="close-manage-btn" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all cursor-pointer border border-white/10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             
-            <!-- Upload Excel Section -->
-            <div class="w-full bg-slate-900/60 p-6 rounded-xl border border-slate-700 mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-bold text-teal-400 mb-1">Import from Excel/CSV</h3>
-                    <p class="text-xs text-gray-400 mb-2">หัวคอลัมน์: Question, Code, CorrectAnswer, Choices (ตัวเลือกคั่นด้วย , )</p>
-                    <button id="download-template-btn" class="text-xs bg-slate-700 hover:bg-slate-600 text-teal-300 py-1.5 px-3 rounded border border-slate-500 transition cursor-pointer flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> ดาวน์โหลดไฟล์เทมเพลต (CSV)
+            <!-- Scrollable Content -->
+            <div class="w-full overflow-y-auto pr-2 pb-4 flex flex-col gap-6">
+                <!-- Upload Section -->
+                <div class="w-full bg-slate-900/60 p-6 rounded-2xl border border-white/10 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between shadow-lg relative overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500"></div>
+                    <div>
+                        <h3 class="text-lg font-black text-cyan-400 mb-2 uppercase tracking-wide">Batch Import (Excel/CSV)</h3>
+                        <p class="text-xs text-slate-400 mb-3 font-mono">Format: Question, Code, CorrectAnswer, Choices(comma separated)</p>
+                        <button id="download-template-btn" class="text-xs bg-slate-800 hover:bg-slate-700 text-cyan-300 py-2 px-4 rounded-lg border border-cyan-500/30 transition-all cursor-pointer flex items-center gap-2 font-bold uppercase tracking-wider shadow-md">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Download Template
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3 w-full md:w-auto bg-slate-950/50 p-2 rounded-xl border border-white/5">
+                        <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20 cursor-pointer w-full md:w-auto font-mono">
+                        <button id="import-excel-btn" class="bg-cyan-500 text-slate-950 font-black px-6 py-2.5 rounded-lg hover:bg-cyan-400 hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider text-sm">
+                            Execute Upload
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Manually Section -->
+                <div class="w-full bg-slate-900/60 p-6 rounded-2xl border border-white/10 shadow-lg relative overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500"></div>
+                    <h3 class="text-lg font-black text-yellow-400 mb-4 uppercase tracking-wide flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Manual Entry
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Question</label>
+                            <input type="text" id="new-q-text" class="premium-input w-full rounded-xl px-4 py-2.5 text-white text-sm" placeholder="e.g., ลากคำสั่งเงื่อนไขที่ถูกต้อง...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Code <span class="text-slate-500 lowercase">(Use &lt;div class="drop-zone" data-target="ANS"&gt;&lt;/div&gt;)</span></label>
+                            <textarea id="new-q-code" class="premium-input w-full rounded-xl px-4 py-2 text-white font-mono text-xs h-10 resize-none leading-relaxed" placeholder="Code snippet here..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider text-emerald-400">Correct Answer</label>
+                            <input type="text" id="new-q-ans" class="premium-input w-full rounded-xl px-4 py-2.5 text-emerald-300 font-mono text-sm" placeholder="e.g., if">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Choices <span class="text-slate-500 lowercase">(Comma separated)</span></label>
+                            <input type="text" id="new-q-choices" class="premium-input w-full rounded-xl px-4 py-2.5 text-yellow-200 font-mono text-sm" placeholder="e.g., if, elif, else">
+                        </div>
+                    </div>
+                    <button id="add-q-btn" class="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black px-8 py-3 rounded-xl hover:shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all w-full md:w-auto cursor-pointer uppercase tracking-widest text-sm border-b-4 border-emerald-700 active:border-b-0 active:mt-1">
+                        Insert Record
                     </button>
                 </div>
-                <div class="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
-                    <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-teal-500/20 file:text-teal-400 hover:file:bg-teal-500/30 cursor-pointer w-full md:w-auto">
-                    <button id="import-excel-btn" class="bg-teal-500 text-slate-900 font-bold px-4 py-2 rounded-lg hover:bg-teal-400 transition cursor-pointer whitespace-nowrap">
-                        Upload
-                    </button>
-                </div>
-            </div>
 
-            <!-- Add Manually Section -->
-            <div class="w-full bg-slate-900/60 p-6 rounded-xl border border-slate-700 mb-6">
-                <h3 class="text-lg font-bold text-yellow-300 mb-4">Add New Question</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Question (คำถาม)</label>
-                        <input type="text" id="new-q-text" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white">
+                <!-- Data Table -->
+                <div class="w-full">
+                    <div class="flex justify-between items-end mb-4">
+                        <h3 class="text-lg font-black text-white uppercase tracking-wide">Active Database</h3>
+                        <span class="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full text-xs font-bold font-mono">Count: <span id="q-count">0</span></span>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Code (ใส่ &lt;div class="drop-zone" data-target="คำตอบ"&gt;&lt;/div&gt; ตรงช่องว่าง)</label>
-                        <textarea id="new-q-code" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white font-mono text-sm h-10"></textarea>
+                    <div id="q-list" class="flex flex-col gap-3 w-full">
+                        <!-- List injected here -->
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Correct Answer (คำตอบที่ถูก)</label>
-                        <input type="text" id="new-q-ans" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Choices (ตัวเลือก คั่นด้วยลูกน้ำ , )</label>
-                        <input type="text" id="new-q-choices" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white" placeholder="if, elif, else">
-                    </div>
-                </div>
-                <button id="add-q-btn" class="bg-emerald-500 text-slate-900 font-bold px-6 py-2 rounded-lg hover:bg-emerald-400 transition w-full md:w-auto cursor-pointer">
-                    Add Question
-                </button>
-            </div>
-
-            <div class="w-full">
-                <h3 class="text-lg font-bold text-white mb-4">Current Questions (<span id="q-count">0</span>)</h3>
-                <div id="q-list" class="flex flex-col gap-3 w-full">
-                    <!-- List injected here -->
                 </div>
             </div>
         </div>
@@ -531,7 +766,7 @@
             result: document.getElementById('result-screen'),
             loading: document.getElementById('loading-screen'),
             manage: document.getElementById('manage-screen'),
-            codeContainer: document.getElementById('code-container'),
+            codeContent: document.getElementById('code-content'),
             inventory: document.getElementById('blocks-inventory'),
             leaderboard: document.getElementById('leaderboard-screen')
         };
@@ -553,10 +788,15 @@
         async function initAudio() {
             if (audioSynth) return;
             await Tone.start();
+            // Sci-fi synth setup
             audioSynth = new Tone.PolySynth(Tone.Synth, {
-                oscillator: { type: "sine" },
-                envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 1 }
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.5 }
             }).toDestination();
+            
+            // Add some subtle delay/reverb for sci-fi feel
+            const reverb = new Tone.Reverb(1.5).toDestination();
+            audioSynth.connect(reverb);
         }
 
         function playCorrectSound() {
@@ -565,6 +805,7 @@
             audioSynth.triggerAttackRelease("C5", "16n", now);
             audioSynth.triggerAttackRelease("E5", "16n", now + 0.1);
             audioSynth.triggerAttackRelease("G5", "8n", now + 0.2);
+            audioSynth.triggerAttackRelease("C6", "4n", now + 0.3);
         }
 
         function playWrongSound() {
@@ -584,59 +825,59 @@
         // ==========================================
         const qBank = [
             { q: "ลากคำสั่งตรวจสอบเงื่อนไขหลักไปเติมให้ถูกต้อง", ans: "if", choices: ["if", "elif", "else"],
-              code: `<span class="var">age</span> = <span class="num">15</span>\n<div class="drop-zone" data-target="if"></div> <span class="var">age</span> >= <span class="num">18</span>:\n    <span class="fn">print</span>(<span class="str">'Adult'</span>)` },
+              code: `<span class="var">age</span> <span class="op">=</span> <span class="num">15</span>\n<div class="drop-zone" data-target="if"></div> <span class="var">age</span> <span class="op">>=</span> <span class="num">18</span>:\n    <span class="fn">print</span>(<span class="str">'Adult'</span>)` },
             { q: "เติมคำสั่งสำหรับกรณีที่ไม่ตรงกับเงื่อนไขใดเลย", ans: "else:", choices: ["else:", "elif:", "if:"],
-              code: `<span class="kw">if</span> <span class="var">x</span> > <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">'Yes'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">x</span> <span class="op">></span> <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">'Yes'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
             { q: "ลากตัวดำเนินการ 'เท่ากับ' ไปใส่ในโค้ด", ans: "==", choices: ["==", "=", "!=", ">="],
               code: `<span class="kw">if</span> <span class="var">pwd</span> <div class="drop-zone" data-target="=="></div> <span class="str">'1234'</span>:\n    <span class="fn">print</span>(<span class="str">'Welcome'</span>)` },
             { q: "เติมคำสั่งสำหรับเงื่อนไขที่สอง (ถ้าเงื่อนไขแรกเป็นเท็จ)", ans: "elif", choices: ["elif", "else", "if"],
-              code: `<span class="kw">if</span> <span class="var">score</span> >= <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">score</span> >= <span class="num">70</span>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">score</span> <span class="op">>=</span> <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">score</span> <span class="op">>=</span> <span class="num">70</span>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
             { q: "ลากตัวดำเนินการ 'ไม่เท่ากับ' ไปใส่ในโค้ด", ans: "!=", choices: ["!=", "==", "not", "<>"],
               code: `<span class="kw">if</span> <span class="var">status</span> <div class="drop-zone" data-target="!="></div> <span class="str">'admin'</span>:\n    <span class="fn">print</span>(<span class="str">'Access Denied'</span>)` },
             { q: "เติมโครงสร้างให้สมบูรณ์เมื่อต้องการเช็คเงื่อนไขเดียว", ans: "if", choices: ["if", "elif", "else"],
-              code: `<div class="drop-zone" data-target="if"></div> <span class="var">money</span> < <span class="num">100</span>:\n    <span class="fn">print</span>(<span class="str">'Not enough'</span>)` },
+              code: `<div class="drop-zone" data-target="if"></div> <span class="var">money</span> <span class="op"><</span> <span class="num">100</span>:\n    <span class="fn">print</span>(<span class="str">'Not enough'</span>)` },
             { q: "โปรแกรมทายตัวเลข โค้ดส่วนใดหายไป?", ans: "elif", choices: ["elif", "else", "if"],
-              code: `<span class="kw">if</span> <span class="var">guess</span> > <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too high'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">guess</span> < <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too low'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">guess</span> <span class="op">></span> <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too high'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">guess</span> <span class="op"><</span> <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too low'</span>)` },
             { q: "ตัวดำเนินการใดแปลว่า 'น้อยกว่าหรือเท่ากับ'", ans: "<=", choices: ["<=", ">=", "<", "=="],
               code: `<span class="kw">if</span> <span class="var">stock</span> <div class="drop-zone" data-target="<="></div> <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">'Reorder needed'</span>)` },
             { q: "ไวยากรณ์ (Syntax) ที่ถูกต้องต้องมีอะไรปิดท้ายบรรทัด if?", ans: ":", choices: [":", ";", "{", "()"],
-              code: `<span class="kw">if</span> <span class="var">is_rainy</span> == <span class="kw">True</span><div class="drop-zone" data-target=":"></div>\n    <span class="fn">print</span>(<span class="str">'Take umbrella'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">is_rainy</span> <span class="op">==</span> <span class="kw">True</span><div class="drop-zone" data-target=":"></div>\n    <span class="fn">print</span>(<span class="str">'Take umbrella'</span>)` },
             { q: "คำสั่งใดใช้ตรวจสอบเมื่อ if ก่อนหน้าไม่เป็นจริง", ans: "elif", choices: ["elif", "else if", "elseif"],
-              code: `<span class="kw">if</span> <span class="var">x</span> == <span class="num">1</span>:\n    ...\n<div class="drop-zone" data-target="elif"></div> <span class="var">x</span> == <span class="num">2</span>:\n    ...` },
+              code: `<span class="kw">if</span> <span class="var">x</span> <span class="op">==</span> <span class="num">1</span>:\n    <span class="kw">pass</span>\n<div class="drop-zone" data-target="elif"></div> <span class="var">x</span> <span class="op">==</span> <span class="num">2</span>:\n    <span class="kw">pass</span>` },
             { q: "โค้ดตัดเกรดนี้ ขาดเครื่องหมายเปรียบเทียบใดเพื่อให้คนที่ได้ 80 พอดีได้เกรด A", ans: ">=", choices: [">=", ">", "==", "<="],
               code: `<span class="kw">if</span> <span class="var">score</span> <div class="drop-zone" data-target=">="></div> <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)` },
             { q: "หาผลลัพธ์: x = 10, y = 5 จะแสดงผลคำว่าอะไร?", ans: "print('B')", choices: ["print('B')", "print('A')", "print('C')"],
-              code: `<span class="var">x</span> = <span class="num">10</span>; <span class="var">y</span> = <span class="num">5</span>\n<span class="kw">if</span> <span class="var">x</span> < <span class="var">y</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">else</span>:\n    <div class="drop-zone" data-target="print('B')"></div>` },
+              code: `<span class="var">x</span> <span class="op">=</span> <span class="num">10</span>\n<span class="var">y</span> <span class="op">=</span> <span class="num">5</span>\n<span class="kw">if</span> <span class="var">x</span> <span class="op"><</span> <span class="var">y</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">else</span>:\n    <div class="drop-zone" data-target="print('B')"></div>` },
             { q: "ผู้เล่นอายุน้อยกว่า 13 ห้ามเล่น เติมตัวดำเนินการที่เหมาะสม", ans: "<", choices: ["<", "<=", ">", "=="],
               code: `<span class="kw">if</span> <span class="var">age</span> <div class="drop-zone" data-target="<"></div> <span class="num">13</span>:\n    <span class="fn">print</span>(<span class="str">'Not allowed'</span>)` },
             { q: "ถ้าต้องการตรวจสอบว่าเลขเป็นจำนวนคู่ (หาร 2 ลงตัว)", ans: "% 2 == 0", choices: ["% 2 == 0", "/ 2 == 0", "% 2 != 0"],
               code: `<span class="kw">if</span> <span class="var">number</span> <div class="drop-zone" data-target="% 2 == 0"></div>:\n    <span class="fn">print</span>(<span class="str">'Even'</span>)` },
             { q: "โครงสร้าง if-elif-else ต้องจบด้วยอะไร (หากครอบคลุมกรณีที่เหลือ)", ans: "else:", choices: ["else:", "elif:", "endif:"],
-              code: `<span class="kw">if</span> <span class="var">x</span> > <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Pos'</span>)\n<span class="kw">elif</span> <span class="var">x</span> < <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Neg'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'Zero'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">x</span> <span class="op">></span> <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Pos'</span>)\n<span class="kw">elif</span> <span class="var">x</span> <span class="op"><</span> <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Neg'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'Zero'</span>)` },
             { q: "แก้ไข Bug: บรรทัดใดขาดเครื่องหมาย Colon (:)", ans: "elif temp > 30:", choices: ["elif temp > 30:", "if temp > 40:", "else:"],
-              code: `<span class="kw">if</span> <span class="var">temp</span> > <span class="num">40</span>:\n    <span class="fn">print</span>(<span class="str">'Very Hot'</span>)\n<div class="drop-zone" data-target="elif temp > 30:"></div>\n    <span class="fn">print</span>(<span class="str">'Hot'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">temp</span> <span class="op">></span> <span class="num">40</span>:\n    <span class="fn">print</span>(<span class="str">'Very Hot'</span>)\n<div class="drop-zone" data-target="elif temp > 30:"></div>\n    <span class="fn">print</span>(<span class="str">'Hot'</span>)` },
             { q: "ลากเงื่อนไขที่รวม 2 กรณีด้วย 'หรือ' (or)", ans: "or", choices: ["or", "and", "not", "&&"],
-              code: `<span class="kw">if</span> <span class="var">day</span> == <span class="str">'Sat'</span> <div class="drop-zone" data-target="or"></div> <span class="var">day</span> == <span class="str">'Sun'</span>:\n    <span class="fn">print</span>(<span class="str">'Weekend'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">day</span> <span class="op">==</span> <span class="str">'Sat'</span> <div class="drop-zone" data-target="or"></div> <span class="var">day</span> <span class="op">==</span> <span class="str">'Sun'</span>:\n    <span class="fn">print</span>(<span class="str">'Weekend'</span>)` },
             { q: "ผลลัพธ์ของโค้ดคืออะไร (num = 7)?", ans: "print('Yes')", choices: ["print('Yes')", "print('No')", "Error"],
-              code: `<span class="var">num</span> = <span class="num">7</span>\n<span class="kw">if</span> <span class="var">num</span> > <span class="num">5</span> <span class="kw">and</span> <span class="var">num</span> < <span class="num">10</span>:\n    <div class="drop-zone" data-target="print('Yes')"></div>\n<span class="kw">else</span>:\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
+              code: `<span class="var">num</span> <span class="op">=</span> <span class="num">7</span>\n<span class="kw">if</span> <span class="var">num</span> <span class="op">></span> <span class="num">5</span> <span class="kw">and</span> <span class="var">num</span> <span class="op"><</span> <span class="num">10</span>:\n    <div class="drop-zone" data-target="print('Yes')"></div>\n<span class="kw">else</span>:\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
             { q: "ตรวจสอบตัวแปรข้อความว่าเป็นค่าว่างหรือไม่", ans: "== ''", choices: ["== ''", "== 0", "== None"],
               code: `<span class="kw">if</span> <span class="var">name</span> <div class="drop-zone" data-target="== ''"></div>:\n    <span class="fn">print</span>(<span class="str">'Please enter name'</span>)` },
             { q: "การเขียนเงื่อนไขแบบลดรูป (Shorthand) ตัวแปร x เป็นจริง", ans: "if x:", choices: ["if x:", "if x == True:", "if x is True:"],
-              code: `<span class="var">x</span> = <span class="kw">True</span>\n<div class="drop-zone" data-target="if x:"></div>\n    <span class="fn">print</span>(<span class="str">'Is True'</span>)` },
+              code: `<span class="var">x</span> <span class="op">=</span> <span class="kw">True</span>\n<div class="drop-zone" data-target="if x:"></div>\n    <span class="fn">print</span>(<span class="str">'Is True'</span>)` },
             { q: "ลำดับการทำงาน: ระบบตัดเกรดต้องเรียงจากคะแนนสูงไปต่ำ ลากเงื่อนไขที่ถูกต้อง", ans: "score >= 70", choices: ["score >= 70", "score >= 80", "score < 70"],
-              code: `<span class="kw">if</span> <span class="var">score</span> >= <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">elif</span> <span class="var">score</span> <div class="drop-zone" data-target="score >= 70"></div>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">score</span> <span class="op">>=</span> <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">elif</span> <span class="var">score</span> <div class="drop-zone" data-target="score >= 70"></div>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
             { q: "Nested if (if ซ้อน if) เติมบรรทัดที่ทำให้โค้ดทำงานถูกต้องเมื่อ x=10, y=20", ans: "if y > 15:", choices: ["if y > 15:", "if y < 15:", "elif y > 15:"],
-              code: `<span class="kw">if</span> <span class="var">x</span> == <span class="num">10</span>:\n    <div class="drop-zone" data-target="if y > 15:"></div>\n        <span class="fn">print</span>(<span class="str">'x is 10 and y > 15'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">x</span> <span class="op">==</span> <span class="num">10</span>:\n    <div class="drop-zone" data-target="if y > 15:"></div>\n        <span class="fn">print</span>(<span class="str">'x is 10 and y > 15'</span>)` },
             { q: "ลากเงื่อนไขที่เทียบเท่ากับ: if not (x == y):", ans: "x != y", choices: ["x != y", "x <> y", "x not y", "x == y"],
               code: `<span class="kw">if</span> <span class="var">x</span> <div class="drop-zone" data-target="x != y"></div>:\n    <span class="fn">print</span>(<span class="str">'Different'</span>)` },
             { q: "คำนวณส่วนลด: ถ้ายอดซื้อ (total) เกิน 500 ลด 10%", ans: "total * 0.9", choices: ["total * 0.9", "total - 10", "total * 0.1"],
-              code: `<span class="kw">if</span> <span class="var">total</span> > <span class="num">500</span>:\n    <span class="var">pay</span> = <div class="drop-zone" data-target="total * 0.9"></div>` },
+              code: `<span class="kw">if</span> <span class="var">total</span> <span class="op">></span> <span class="num">500</span>:\n    <span class="var">pay</span> <span class="op">=</span> <div class="drop-zone" data-target="total * 0.9"></div>` },
             { q: "ตรวจสอบความยาวรหัสผ่าน (pwd) ว่าต้อง 8 ตัวขึ้นไป ใช้ฟังก์ชันใด?", ans: "len(pwd)", choices: ["len(pwd)", "pwd.length", "size(pwd)"],
-              code: `<span class="kw">if</span> <div class="drop-zone" data-target="len(pwd)"></div> >= <span class="num">8</span>:\n    <span class="fn">print</span>(<span class="str">'Valid'</span>)` },
+              code: `<span class="kw">if</span> <div class="drop-zone" data-target="len(pwd)"></div> <span class="op">>=</span> <span class="num">8</span>:\n    <span class="fn">print</span>(<span class="str">'Valid'</span>)` },
             { q: "โปรแกรมคิดค่าส่งฟรี: สมาชิก(is_member) หรือ ยอดซื้อ>=1000", ans: "or", choices: ["or", "and", "not"],
-              code: `<span class="kw">if</span> <span class="var">is_member</span> <div class="drop-zone" data-target="or"></div> <span class="var">purchase</span> >= <span class="num">1000</span>:\n    <span class="fn">print</span>(<span class="str">'Free Shipping'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">is_member</span> <div class="drop-zone" data-target="or"></div> <span class="var">purchase</span> <span class="op">>=</span> <span class="num">1000</span>:\n    <span class="fn">print</span>(<span class="str">'Free Shipping'</span>)` },
             { q: "แก้ Logic Error: โค้ดนี้เช็คว่าเลขอยู่ในช่วง 10-20 หรือไม่", ans: "and", choices: ["and", "or", "&"],
-              code: `<span class="kw">if</span> <span class="var">num</span> >= <span class="num">10</span> <div class="drop-zone" data-target="and"></div> <span class="var">num</span> <= <span class="num">20</span>:\n    <span class="fn">print</span>(<span class="str">'In range'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">num</span> <span class="op">>=</span> <span class="num">10</span> <div class="drop-zone" data-target="and"></div> <span class="var">num</span> <span class="op"><=</span> <span class="num">20</span>:\n    <span class="fn">print</span>(<span class="str">'In range'</span>)` },
             { q: "การเช็คชนิดข้อมูล: ถ้ารับค่า x มาเป็นตัวเลข", ans: "type(x) == int", choices: ["type(x) == int", "x == int", "int(x) == True"],
               code: `<span class="kw">if</span> <div class="drop-zone" data-target="type(x) == int"></div>:\n    <span class="fn">print</span>(<span class="str">'Is Integer'</span>)` },
             { q: "ตรวจสอบว่าค่าตัวแปรลิสต์ว่างหรือไม่", ans: "len(my_list) == 0", choices: ["len(my_list) == 0", "my_list == empty", "my_list == None"],
@@ -672,8 +913,9 @@
             
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(110, 231, 183, 0.4)', lineWidth: 3});
-                    drawLandmarks(canvasCtx, landmarks, {color: '#FDE68A', lineWidth: 1, radius: 2});
+                    // Premium neon skeleton styling
+                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(0, 240, 255, 0.6)', lineWidth: 3});
+                    drawLandmarks(canvasCtx, landmarks, {color: '#00F0FF', fillColor: '#050B14', lineWidth: 1, radius: 3});
                     
                     const indexTip = landmarks[8];
                     const thumbTip = landmarks[4];
@@ -865,10 +1107,10 @@
 
         async function fetchLeaderboardData() {
             const list = document.getElementById('leaderboard-list');
-            list.innerHTML = '<div class="text-center text-teal-400 py-8 font-mono animate-pulse"><div class="loader mx-auto mb-4 w-8 h-8"></div>Connecting to Database...</div>';
+            list.innerHTML = '<div class="text-center text-cyan-400 py-12 font-mono animate-pulse flex flex-col items-center"><div class="loader mb-4 w-10 h-10 border-4"></div><span class="tracking-widest uppercase text-xs">Querying Database...</span></div>';
             
             if (!APPS_SCRIPT_URL) {
-                list.innerHTML = '<div class="text-center text-red-400 py-8 font-mono">Error: API URL Not Configured</div>';
+                list.innerHTML = '<div class="text-center text-red-400 py-8 font-mono bg-red-900/20 rounded border border-red-500/30">Error: API URL Not Configured</div>';
                 return;
             }
 
@@ -877,37 +1119,37 @@
                 const data = await response.json();
                 
                 if (data.error) {
-                    list.innerHTML = `<div class="text-center text-red-400 py-8 font-mono">Error: ${data.error}</div>`;
+                    list.innerHTML = `<div class="text-center text-red-400 py-8 font-mono bg-red-900/20 rounded border border-red-500/30">Error: ${data.error}</div>`;
                     return;
                 }
 
                 if (data.length === 0) {
-                    list.innerHTML = '<div class="text-center text-gray-500 py-8 font-mono">No records found.</div>';
+                    list.innerHTML = '<div class="text-center text-slate-500 py-12 font-mono uppercase tracking-widest">No records found</div>';
                     return;
                 }
 
                 list.innerHTML = '';
                 data.forEach((player, index) => {
                     let rankTpl = '';
-                    if (index === 0) rankTpl = '<span class="w-8 h-8 rounded-full bg-yellow-400 text-slate-900 flex items-center justify-center font-black shadow-[0_0_10px_rgba(250,204,21,0.8)]">1</span>';
-                    else if (index === 1) rankTpl = '<span class="w-8 h-8 rounded-full bg-gray-300 text-slate-900 flex items-center justify-center font-black shadow-[0_0_10px_rgba(209,213,219,0.8)]">2</span>';
-                    else if (index === 2) rankTpl = '<span class="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-black shadow-[0_0_10px_rgba(217,119,6,0.8)]">3</span>';
-                    else rankTpl = `<span class="text-gray-400 font-bold">${index + 1}</span>`;
+                    if (index === 0) rankTpl = '<span class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 text-slate-900 flex items-center justify-center font-black shadow-[0_0_15px_rgba(250,204,21,0.8)] border border-yellow-200">1</span>';
+                    else if (index === 1) rankTpl = '<span class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-200 to-gray-500 text-slate-900 flex items-center justify-center font-black shadow-[0_0_15px_rgba(209,213,219,0.8)] border border-gray-100">2</span>';
+                    else if (index === 2) rankTpl = '<span class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-700 text-white flex items-center justify-center font-black shadow-[0_0_15px_rgba(217,119,6,0.8)] border border-amber-300">3</span>';
+                    else rankTpl = `<span class="text-slate-500 font-bold font-mono">${index + 1}</span>`;
 
                     const item = document.createElement('div');
-                    item.className = 'grid grid-cols-12 gap-2 p-3 items-center bg-slate-800/50 rounded-xl border border-slate-700/50 hover:bg-slate-700/50 transition-colors';
+                    item.className = 'grid grid-cols-12 gap-2 p-3 items-center bg-slate-900/40 rounded-xl border border-white/5 hover:bg-slate-800/80 hover:border-cyan-500/30 transition-all group';
                     item.innerHTML = `
-                        <div class="col-span-2 flex justify-center">${rankTpl}</div>
-                        <div class="col-span-4 font-bold text-white truncate">${player.studentId}</div>
-                        <div class="col-span-3 text-right font-black text-yellow-300 font-mono">${player.score}</div>
-                        <div class="col-span-3 text-right font-bold text-teal-400 font-mono">${formatTime(player.time)}</div>
+                        <div class="col-span-2 flex justify-center transform group-hover:scale-110 transition-transform">${rankTpl}</div>
+                        <div class="col-span-4 font-bold text-white truncate text-sm">${player.studentId}</div>
+                        <div class="col-span-3 text-right font-black text-yellow-400 font-mono text-lg drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]">${player.score.toString()}</div>
+                        <div class="col-span-3 text-right font-bold text-emerald-400 font-mono text-sm">${formatTime(player.time)}</div>
                     `;
                     list.appendChild(item);
                 });
 
             } catch (error) {
                 console.error("Leaderboard fetch error:", error);
-                list.innerHTML = '<div class="text-center text-red-400 py-8 font-mono">Network Error. Failed to fetch leaderboard.</div>';
+                list.innerHTML = '<div class="text-center text-red-400 py-8 font-mono bg-red-900/20 rounded border border-red-500/30">Network Error. Database unreachable.</div>';
             }
         }
 
@@ -916,8 +1158,9 @@
 
             const idInput = document.getElementById('student-id').value.trim();
             if(!idInput) {
-                document.getElementById('student-id').classList.add('border-red-500', 'animate-pulse');
-                setTimeout(() => document.getElementById('student-id').classList.remove('border-red-500', 'animate-pulse'), 1000);
+                const inputEl = document.getElementById('student-id');
+                inputEl.classList.add('border-red-500', 'shadow-[0_0_15px_rgba(239,68,68,0.5)]', 'animate-pulse');
+                setTimeout(() => inputEl.classList.remove('border-red-500', 'shadow-[0_0_15px_rgba(239,68,68,0.5)]', 'animate-pulse'), 1000);
                 return;
             }
 
@@ -956,7 +1199,7 @@
             state.questionStartTime = Date.now();
 
             document.getElementById('question-text').innerText = qData.q;
-            ui.codeContainer.innerHTML = `<pre><code>${qData.code}</code></pre>`;
+            ui.codeContent.innerHTML = `<pre><code>${qData.code}</code></pre>`;
 
             ui.inventory.innerHTML = '';
             let shuffledOptions = shuffleArray([...qData.choices]);
@@ -972,7 +1215,7 @@
             document.getElementById('progress-text').innerText = `${state.currentQuestionIndex + 1}/${state.totalQuestions}`;
             const pct = ((state.currentQuestionIndex) / state.totalQuestions) * 100;
             document.getElementById('progress-bar-fill').style.width = `${pct}%`;
-            document.getElementById('score-display').innerText = state.score;
+            document.getElementById('score-display').innerText = state.score.toString();
         }
 
         function evaluateDrop(block, dropZone) {
@@ -989,7 +1232,7 @@
             if (isCorrect) {
                 dropZone.classList.add('filled-correct');
                 state.score += 100; 
-                if(timeSpent < 15) state.score += 30;
+                if(timeSpent < 15) state.score += 30; // Speed bonus
                 playCorrectSound(); 
                 showFeedback(true);
             } else {
@@ -998,7 +1241,7 @@
                 showFeedback(false);
             }
             
-            document.getElementById('score-display').innerText = state.score;
+            document.getElementById('score-display').innerText = state.score.toString();
 
             state.sessionData.push({
                 DateTime: new Date().toISOString(),
@@ -1027,22 +1270,27 @@
             const icon = document.getElementById('feedback-icon');
             const title = document.getElementById('feedback-text');
             const sub = document.getElementById('feedback-subtext');
+            const glow = document.getElementById('feedback-glow');
 
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
 
             if(isCorrect) {
-                icon.innerHTML = '✓';
-                icon.className = 'w-28 h-28 rounded-full flex items-center justify-center mb-6 text-6xl bg-emerald-500 text-white animate-bounce shadow-[0_0_30px_rgba(16,185,129,0.8)]';
+                icon.innerHTML = '<svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+                icon.className = 'relative z-10 w-32 h-32 rounded-full flex items-center justify-center mb-6 text-emerald-400 bg-emerald-950/80 border-4 border-emerald-400 shadow-[0_0_50px_rgba(16,185,129,0.8)] animate-bounce';
                 title.innerText = 'COMPILE SUCCESS';
-                title.className = 'text-5xl font-black text-emerald-400 mb-3 tracking-wide uppercase';
-                sub.innerText = 'Syntax & Logic verified.';
+                title.className = 'relative z-10 text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-emerald-300 to-emerald-600 mb-4 tracking-widest drop-shadow-[0_0_15px_rgba(16,185,129,0.5)] text-center uppercase';
+                sub.innerText = 'Syntax & Logic Verified';
+                sub.className = 'relative z-10 text-xl text-emerald-100 font-mono font-bold bg-emerald-900/50 px-6 py-2 rounded-lg border border-emerald-500/30 uppercase tracking-wider';
+                glow.className = 'absolute inset-0 blur-[80px] rounded-full z-0 pointer-events-none bg-emerald-500/20';
             } else {
-                icon.innerHTML = '!';
-                icon.className = 'w-28 h-28 rounded-full flex items-center justify-center mb-6 text-6xl bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.8)]';
+                icon.innerHTML = '<svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>';
+                icon.className = 'relative z-10 w-32 h-32 rounded-full flex items-center justify-center mb-6 text-red-400 bg-red-950/80 border-4 border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.8)]';
                 title.innerText = 'SYNTAX ERROR';
-                title.className = 'text-5xl font-black text-red-400 mb-3 tracking-wide uppercase';
+                title.className = 'relative z-10 text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-600 mb-4 tracking-widest drop-shadow-[0_0_15px_rgba(239,68,68,0.5)] text-center uppercase';
                 sub.innerText = `Expected: ${state.questions[state.currentQuestionIndex].ans}`;
+                sub.className = 'relative z-10 text-xl text-red-100 font-mono font-bold bg-red-900/50 px-6 py-2 rounded-lg border border-red-500/30';
+                glow.className = 'absolute inset-0 blur-[80px] rounded-full z-0 pointer-events-none bg-red-500/20';
             }
         }
 
@@ -1057,7 +1305,7 @@
             const acc = state.totalQuestions > 0 ? Math.round((correctCount / (state.currentQuestionIndex || 1)) * 100) : 0;
 
             document.getElementById('res-student').innerText = state.studentId;
-            document.getElementById('res-score').innerText = state.score;
+            document.getElementById('res-score').innerText = state.score.toString();
             document.getElementById('res-accuracy').innerText = `${acc}%`;
             document.getElementById('res-time').innerText = formatTime(state.totalTime);
 
@@ -1069,14 +1317,16 @@
             ui.result.classList.add('hidden');
             ui.login.classList.remove('hidden');
             ui.login.classList.add('flex');
-            document.getElementById('sync-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> Syncing to Cloud Database...';
-            document.getElementById('sync-status').className = "text-sm text-gray-400 mb-6 font-mono flex items-center gap-2";
+            document.getElementById('sync-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Syncing to Neural Net...';
+            document.getElementById('sync-status').className = "text-xs text-slate-400 mb-6 font-mono flex items-center gap-2 uppercase tracking-wider bg-slate-900/50 px-4 py-2 rounded border border-white/5";
         }
 
         async function sendDataToSheets() {
             if (!APPS_SCRIPT_URL) {
-                document.getElementById('sync-status').innerHTML = "⚠️ Offline Mode (No API URL)";
-                document.getElementById('sync-status').classList.replace('text-gray-400', 'text-yellow-400');
+                document.getElementById('sync-status').innerHTML = "⚠️ Offline Mode (API Unreachable)";
+                document.getElementById('sync-status').classList.replace('text-slate-400', 'text-yellow-400');
+                document.getElementById('sync-status').classList.replace('bg-slate-900/50', 'bg-yellow-900/30');
+                document.getElementById('sync-status').classList.replace('border-white/5', 'border-yellow-500/30');
                 return;
             }
 
@@ -1091,27 +1341,33 @@
             try {
                 fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    redirect: 'follow', // รับค่าการส่งกลับของ Google Script อย่างถูกต้อง
+                    redirect: 'follow', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 })
                 .then(res => res.json())
                 .then(data => {
                     if(data.status === "success") {
-                        document.getElementById('sync-status').innerHTML = "✅ Database Sync Complete";
-                        document.getElementById('sync-status').classList.replace('text-gray-400', 'text-emerald-400');
+                        document.getElementById('sync-status').innerHTML = "✅ Synchronization Complete";
+                        document.getElementById('sync-status').classList.replace('text-slate-400', 'text-emerald-400');
+                        document.getElementById('sync-status').classList.replace('bg-slate-900/50', 'bg-emerald-900/30');
+                        document.getElementById('sync-status').classList.replace('border-white/5', 'border-emerald-500/30');
                     } else {
                         throw new Error(data.message || "Unknown Backend Error");
                     }
                 }).catch((error) => {
                     console.error("Network Fetch Error:", error);
                     document.getElementById('sync-status').innerHTML = "❌ Sync Failed: " + error.message;
-                    document.getElementById('sync-status').classList.replace('text-gray-400', 'text-red-400');
+                    document.getElementById('sync-status').classList.replace('text-slate-400', 'text-red-400');
+                    document.getElementById('sync-status').classList.replace('bg-slate-900/50', 'bg-red-900/30');
+                    document.getElementById('sync-status').classList.replace('border-white/5', 'border-red-500/30');
                 });
             } catch (error) {
                 console.error("System Error:", error);
                 document.getElementById('sync-status').innerHTML = "❌ Sync Failed. System Error.";
-                document.getElementById('sync-status').classList.replace('text-gray-400', 'text-red-400');
+                document.getElementById('sync-status').classList.replace('text-slate-400', 'text-red-400');
+                document.getElementById('sync-status').classList.replace('bg-slate-900/50', 'bg-red-900/30');
+                document.getElementById('sync-status').classList.replace('border-white/5', 'border-red-500/30');
             }
         }
 
@@ -1198,17 +1454,17 @@
         function renderManageQuestions() {
             const list = document.getElementById('q-list');
             list.innerHTML = '';
-            document.getElementById('q-count').innerText = qBank.length;
+            document.getElementById('q-count').innerText = qBank.length.toString();
 
             qBank.forEach((q, index) => {
                 const item = document.createElement('div');
-                item.className = 'bg-slate-800 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center border border-slate-700 gap-4';
+                item.className = 'bg-slate-900/60 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center border border-white/5 gap-4 hover:border-purple-500/30 transition-all';
                 item.innerHTML = `
                     <div class="flex-1 overflow-hidden w-full">
-                        <p class="text-white font-bold truncate text-sm md:text-base">${index + 1}. ${q.q}</p>
-                        <p class="text-xs text-emerald-400 font-mono mt-1 truncate">Ans: ${q.ans} | Choices: ${q.choices.join(', ')}</p>
+                        <p class="text-white font-bold truncate text-sm md:text-base mb-1"><span class="text-purple-400 mr-2">${index + 1}.</span> ${q.q}</p>
+                        <p class="text-xs text-slate-400 font-mono truncate bg-slate-950/50 inline-block px-2 py-1 rounded border border-white/5"><span class="text-emerald-400">Ans:</span> ${q.ans} <span class="mx-2 text-slate-600">|</span> <span class="text-yellow-400">Choices:</span> ${q.choices.join(', ')}</p>
                     </div>
-                    <button class="bg-red-500/20 text-red-400 p-2 rounded-lg hover:bg-red-500 hover:text-white transition shrink-0 cursor-pointer" onclick="deleteQuestion(${index})">
+                    <button class="bg-red-900/30 text-red-400 p-2.5 rounded-xl border border-red-500/30 hover:bg-red-500 hover:text-white transition shrink-0 cursor-pointer shadow-md" onclick="deleteQuestion(${index})">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                 `;
@@ -1230,16 +1486,16 @@
             if(!text || !code || !ans || !choicesRaw) {
                 const btn = document.getElementById('add-q-btn');
                 const origText = btn.innerText;
-                btn.innerText = "Error: Fill all fields!";
-                btn.classList.add('bg-red-500');
+                btn.innerText = "Error: Incomplete Data";
+                btn.className = "bg-red-600 text-white font-black px-8 py-3 rounded-xl transition-all w-full md:w-auto cursor-pointer uppercase tracking-widest text-sm border-b-4 border-red-800";
                 setTimeout(() => {
                     btn.innerText = origText;
-                    btn.classList.remove('bg-red-500');
+                    btn.className = "bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black px-8 py-3 rounded-xl hover:shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all w-full md:w-auto cursor-pointer uppercase tracking-widest text-sm border-b-4 border-emerald-700 active:border-b-0 active:mt-1";
                 }, 2000);
                 return;
             }
 
-            const choices = choicesRaw.split(',').map(c => c.trim()).filter(c => c);
+            const choices = choicesRaw.split(',').map(c => c.trim()).filter(c => c !== "");
 
             qBank.push({
                 q: text,
@@ -1264,13 +1520,11 @@
             const origText = btn.innerText;
 
             if (!file) {
-                btn.innerText = "Please select file!";
-                btn.classList.add('bg-red-500', 'text-white');
-                btn.classList.remove('bg-teal-500', 'text-slate-900');
+                btn.innerText = "NO FILE SELECTED";
+                btn.className = "bg-red-600 text-white font-black px-6 py-2.5 rounded-lg transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider text-sm";
                 setTimeout(() => {
                     btn.innerText = origText;
-                    btn.classList.remove('bg-red-500', 'text-white');
-                    btn.classList.add('bg-teal-500', 'text-slate-900');
+                    btn.className = "bg-cyan-500 text-slate-950 font-black px-6 py-2.5 rounded-lg hover:bg-cyan-400 hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider text-sm";
                 }, 2000);
                 return;
             }
@@ -1286,13 +1540,13 @@
 
                     let importedCount = 0;
                     json.forEach(row => {
-                        const q = row['Question'] || row['question'] || row['คำถาม'];
-                        const code = row['Code'] || row['code'] || row['โค้ด'];
-                        const ans = row['CorrectAnswer'] || row['correctanswer'] || row['คำตอบที่ถูก'];
-                        const choicesRaw = row['Choices'] || row['choices'] || row['ตัวเลือก'];
+                        const q = row['Question'] ?? row['question'] ?? row['คำถาม'];
+                        const code = row['Code'] ?? row['code'] ?? row['โค้ด'];
+                        const ans = row['CorrectAnswer'] ?? row['correctanswer'] ?? row['คำตอบที่ถูก'];
+                        const choicesRaw = row['Choices'] ?? row['choices'] ?? row['ตัวเลือก'];
 
-                        if (q && code && ans && choicesRaw) {
-                            const choices = choicesRaw.toString().split(',').map(c => c.trim()).filter(c => c);
+                        if (q !== undefined && code !== undefined && ans !== undefined && choicesRaw !== undefined) {
+                            const choices = choicesRaw.toString().split(',').map(c => c.trim()).filter(c => c !== "");
                             qBank.push({
                                 q: q.toString(),
                                 code: code.toString(),
@@ -1304,23 +1558,22 @@
                     });
 
                     if (importedCount > 0) {
-                        btn.innerText = `Success (${importedCount})`;
+                        btn.innerText = `SUCCESS (${importedCount})`;
+                        btn.className = "bg-emerald-500 text-slate-950 font-black px-6 py-2.5 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all whitespace-nowrap uppercase tracking-wider text-sm";
                         renderManageQuestions();
                     } else {
-                        btn.innerText = "No valid data!";
-                        btn.classList.add('bg-red-500', 'text-white');
-                        btn.classList.remove('bg-teal-500', 'text-slate-900');
+                        btn.innerText = "NO VALID DATA";
+                        btn.className = "bg-red-600 text-white font-black px-6 py-2.5 rounded-lg transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider text-sm";
                     }
                 } catch (error) {
                     console.error("Excel parse error:", error);
-                    btn.innerText = "Read Error!";
-                    btn.classList.add('bg-red-500', 'text-white');
-                    btn.classList.remove('bg-teal-500', 'text-slate-900');
+                    btn.innerText = "READ ERROR";
+                    btn.className = "bg-red-600 text-white font-black px-6 py-2.5 rounded-lg transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider text-sm";
                 }
                 
                 setTimeout(() => {
                     btn.innerText = origText;
-                    btn.className = "bg-teal-500 text-slate-900 font-bold px-4 py-2 rounded-lg hover:bg-teal-400 transition cursor-pointer whitespace-nowrap";
+                    btn.className = "bg-cyan-500 text-slate-950 font-black px-6 py-2.5 rounded-lg hover:bg-cyan-400 hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider text-sm";
                     fileInput.value = ''; 
                 }, 3000);
             };
@@ -1329,7 +1582,7 @@
 
         // Download CSV Template Logic
         document.getElementById('download-template-btn').addEventListener('click', () => {
-            const csvContent = `Question,Code,CorrectAnswer,Choices\n"ลากคำสั่งตรวจสอบเงื่อนไขหลักไปเติมให้ถูกต้อง","<span class=""var"">age</span> = <span class=""num"">15</span>\\n<div class=""drop-zone"" data-target=""if""></div> <span class=""var"">age</span> >= <span class=""num"">18</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Adult'</span>)","if","if, elif, else"\n"หาผลลัพธ์: x = 10, y = 5 จะแสดงผลคำว่าอะไร?","<span class=""var"">x</span> = <span class=""num"">10</span>; <span class=""var"">y</span> = <span class=""num"">5</span>\\n<span class=""kw"">if</span> <span class=""var"">x</span> < <span class=""var"">y</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'A'</span>)\\n<span class=""kw"">else</span>:\\n    <div class=""drop-zone"" data-target=""print('B')""></div>","print('B')","print('B'), print('A'), print('C')"\n"ผู้เล่นอายุน้อยกว่า 13 ห้ามเล่น เติมตัวดำเนินการที่เหมาะสม","<span class=""kw"">if</span> <span class=""var"">age</span> <div class=""drop-zone"" data-target=""<""></div> <span class=""num"">13</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Not allowed'</span>)","<","<, <=, >, =="\n"โปรแกรมทายตัวเลข โค้ดส่วนใดหายไป?","<span class=""kw"">if</span> <span class=""var"">guess</span> > <span class=""var"">ans</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Too high'</span>)\\n<div class=""drop-zone"" data-target=""elif""></div> <span class=""var"">guess</span> < <span class=""var"">ans</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Too low'</span>)","elif","elif, else, if"`;
+            const csvContent = `Question,Code,CorrectAnswer,Choices\n"ลากคำสั่งตรวจสอบเงื่อนไขหลักไปเติมให้ถูกต้อง","<span class=""var"">age</span> <span class=""op"">=</span> <span class=""num"">15</span>\\n<div class=""drop-zone"" data-target=""if""></div> <span class=""var"">age</span> <span class=""op"">>=</span> <span class=""num"">18</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Adult'</span>)","if","if, elif, else"\n"หาผลลัพธ์: x = 10, y = 5 จะแสดงผลคำว่าอะไร?","<span class=""var"">x</span> <span class=""op"">=</span> <span class=""num"">10</span>\\n<span class=""var"">y</span> <span class=""op"">=</span> <span class=""num"">5</span>\\n<span class=""kw"">if</span> <span class=""var"">x</span> <span class=""op""><</span> <span class=""var"">y</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'A'</span>)\\n<span class=""kw"">else</span>:\\n    <div class=""drop-zone"" data-target=""print('B')""></div>","print('B')","print('B'), print('A'), print('C')"\n"ผู้เล่นอายุน้อยกว่า 13 ห้ามเล่น เติมตัวดำเนินการที่เหมาะสม","<span class=""kw"">if</span> <span class=""var"">age</span> <div class=""drop-zone"" data-target=""<""></div> <span class=""num"">13</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Not allowed'</span>)","<","<, <=, >, =="\n"โปรแกรมทายตัวเลข โค้ดส่วนใดหายไป?","<span class=""kw"">if</span> <span class=""var"">guess</span> <span class=""op"">></span> <span class=""var"">ans</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Too high'</span>)\\n<div class=""drop-zone"" data-target=""elif""></div> <span class=""var"">guess</span> <span class=""op""><</span> <span class=""var"">ans</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Too low'</span>)","elif","elif, else, if"`;
             
             const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
