@@ -398,7 +398,7 @@
     <!-- Background Overlay for Login/Start Screen -->
     <!-- เปลี่ยน URL ใน style ให้เป็นลิงก์ภาพ Raw จาก GitHub ของคุณ -->
     <div id="login-bg" class="fixed inset-0 z-[5] bg-cover bg-center transition-opacity duration-700 hidden" 
-         style="background-image: url('bg condition.jpg');">
+         style="background-image: url('https://raw.githubusercontent.com/USERNAME/REPO/main/IMAGE.jpg');">
          <!-- เพิ่มเลเยอร์ไล่ระดับสีเพื่อให้ข้อความด้านล่างอ่านง่ายขึ้น -->
          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent"></div>
     </div>
@@ -426,6 +426,21 @@
             <!-- Decorative Glow -->
             <div class="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/20 blur-[50px] rounded-full pointer-events-none"></div>
             
+            <!-- Instructions Panel -->
+            <div class="w-full bg-slate-950/60 p-5 rounded-xl border border-white/5 shadow-inner mb-6 relative overflow-hidden group z-10">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-emerald-400"></div>
+                <p class="font-bold text-cyan-300 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    วิธีการเล่น (AR Interaction)
+                </p>
+                <ul class="list-none space-y-2 text-xs text-slate-300 leading-relaxed ml-1">
+                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> ใช้ <b>นิ้วชี้</b> เล็งพอยน์เตอร์ไปที่บล็อกโค้ดคำตอบ</li>
+                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> <b>จีบนิ้ว</b> (นิ้วชี้+โป้ง) ค้างไว้เพื่อ <b>หยิบ</b> บล็อกโค้ด</li>
+                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> <b>ลาก</b> ไปใส่ใน <b>[ ช่องว่าง ]</b> แล้วปล่อยนิ้ว</li>
+                    <li class="flex items-start gap-2 mt-2 pt-2 border-t border-white/5 text-[10px] text-slate-500">* สามารถใช้เมาส์คลิกลากคำตอบได้เช่นกัน (โหมดปกติ)</li>
+                </ul>
+            </div>
+
             <div class="w-full mb-6 pointer-events-auto relative z-10">
                 <label class="block text-cyan-400 font-bold mb-2 text-xs uppercase tracking-wider ml-1">Developer ID</label>
                 <div class="relative">
