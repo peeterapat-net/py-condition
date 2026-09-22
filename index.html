@@ -8,11 +8,11 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Medipe Hands -->
-    <script src="https://cdn.jsdelivr.net/npm/@medipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@medipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@medipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@medipe/hands/hands.js" crossorigin="anonymous"></script>
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     
     <!-- Tone.js for Sound Effects -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -286,10 +286,17 @@
                 Initialize Quest
             </button>
 
-            <button id="open-manage-btn" class="ar-btn w-full bg-slate-800 text-emerald-400 font-bold text-lg py-3 rounded-xl border-2 border-emerald-500/50 hover:bg-emerald-500/10 transition-colors flex justify-center items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                จัดการคำถาม (Manage Questions)
-            </button>
+            <div class="flex w-full gap-3">
+                <button id="open-leaderboard-btn" class="ar-btn flex-1 bg-yellow-400/90 text-slate-900 font-bold text-lg py-3 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.5)] hover:bg-yellow-300 transition-colors flex justify-center items-center gap-2 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Leaderboard
+                </button>
+
+                <button id="open-manage-btn" class="ar-btn flex-1 bg-slate-800 text-emerald-400 font-bold text-lg py-3 rounded-xl border-2 border-emerald-500/50 hover:bg-emerald-500/10 transition-colors flex justify-center items-center gap-2 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Manage
+                </button>
+            </div>
         </div>
 
         <div id="password-modal" class="absolute inset-0 z-50 hidden flex-col justify-center items-center bg-slate-900/90 backdrop-blur-md pointer-events-auto">
@@ -402,9 +409,39 @@
                 <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> Syncing to Cloud Database...
             </p>
 
-            <button id="restart-btn" class="ar-btn w-full bg-slate-800 text-white font-bold text-lg py-4 rounded-xl border-2 border-slate-600 hover:border-teal-400 uppercase tracking-widest transition-colors cursor-pointer">
-                Reboot System
-            </button>
+            <div class="flex w-full gap-3">
+                <button id="res-leaderboard-btn" class="ar-btn flex-1 bg-yellow-400/90 text-slate-900 font-bold text-lg py-4 rounded-xl border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)] hover:bg-yellow-300 transition-colors cursor-pointer uppercase tracking-widest">
+                    Leaderboard
+                </button>
+                <button id="restart-btn" class="ar-btn flex-1 bg-slate-800 text-white font-bold text-lg py-4 rounded-xl border-2 border-slate-600 hover:border-teal-400 uppercase tracking-widest transition-colors cursor-pointer">
+                    Reboot
+                </button>
+            </div>
+        </div>
+
+        <!-- Leaderboard Screen -->
+        <div id="leaderboard-screen" class="glass-panel w-full max-w-2xl p-8 rounded-3xl hidden flex-col items-center pointer-events-auto">
+            <div class="w-full flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-extrabold text-yellow-300 tracking-wider flex items-center gap-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    GLOBAL LEADERBOARD
+                </h2>
+                <button id="close-leaderboard-btn" class="text-gray-400 hover:text-white transition cursor-pointer">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="w-full bg-slate-900/80 rounded-2xl p-4 border border-slate-700 shadow-inner">
+                <div class="grid grid-cols-12 gap-2 p-2 border-b border-slate-700 mb-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    <div class="col-span-2 text-center">Rank</div>
+                    <div class="col-span-4">Developer ID</div>
+                    <div class="col-span-3 text-right">Score</div>
+                    <div class="col-span-3 text-right">Time</div>
+                </div>
+                <div id="leaderboard-list" class="flex flex-col gap-2 min-h-[250px] max-h-[50vh] overflow-y-auto">
+                    <!-- Leaderboard items injected here -->
+                </div>
+            </div>
         </div>
 
         <div id="manage-screen" class="glass-panel w-full max-w-4xl p-8 rounded-3xl hidden flex-col items-center max-h-[90vh] overflow-y-auto pointer-events-auto">
@@ -472,7 +509,7 @@
         // CONFIGURATION & GLOBAL VARIABLES
         // ==========================================
         
-        // 🔹 ใส่ URL ของ Google Apps Script ที่นี่ 🔹
+        // 🔹 URL ของ Google Apps Script ที่เชื่อมต่อแล้ว 🔹
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwo6acngsBjFjB7Y0ajm3lPbGs8cKb87HTRsd3fmZ0aYUBiyw7LhxKYiFptWYHgBhVl/exec"; 
 
         let state = {
@@ -495,7 +532,8 @@
             loading: document.getElementById('loading-screen'),
             manage: document.getElementById('manage-screen'),
             codeContainer: document.getElementById('code-container'),
-            inventory: document.getElementById('blocks-inventory')
+            inventory: document.getElementById('blocks-inventory'),
+            leaderboard: document.getElementById('leaderboard-screen')
         };
         
         // AR Interaction State
@@ -684,7 +722,7 @@
             canvasCtx.restore();
         }
 
-        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@medipe/hands/${file}`});
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
         hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
         hands.onResults(onResults);
 
@@ -799,8 +837,82 @@
         document.getElementById('restart-btn').addEventListener('click', resetGame);
         document.getElementById('abort-btn').addEventListener('click', endGame);
 
+        document.getElementById('open-leaderboard-btn').addEventListener('click', openLeaderboard);
+        document.getElementById('res-leaderboard-btn').addEventListener('click', openLeaderboard);
+        document.getElementById('close-leaderboard-btn').addEventListener('click', closeLeaderboard);
+
+        function openLeaderboard() {
+            ui.login.classList.add('hidden');
+            ui.login.classList.remove('flex');
+            ui.result.classList.add('hidden');
+            ui.result.classList.remove('flex');
+            ui.leaderboard.classList.remove('hidden');
+            ui.leaderboard.classList.add('flex');
+            fetchLeaderboardData();
+        }
+
+        function closeLeaderboard() {
+            ui.leaderboard.classList.add('hidden');
+            ui.leaderboard.classList.remove('flex');
+            if (state.totalTime > 0 && ui.game.classList.contains('hidden')) {
+                ui.result.classList.remove('hidden');
+                ui.result.classList.add('flex');
+            } else {
+                ui.login.classList.remove('hidden');
+                ui.login.classList.add('flex');
+            }
+        }
+
+        async function fetchLeaderboardData() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '<div class="text-center text-teal-400 py-8 font-mono animate-pulse"><div class="loader mx-auto mb-4 w-8 h-8"></div>Connecting to Database...</div>';
+            
+            if (!APPS_SCRIPT_URL) {
+                list.innerHTML = '<div class="text-center text-red-400 py-8 font-mono">Error: API URL Not Configured</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL + "?action=leaderboard");
+                const data = await response.json();
+                
+                if (data.error) {
+                    list.innerHTML = `<div class="text-center text-red-400 py-8 font-mono">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                if (data.length === 0) {
+                    list.innerHTML = '<div class="text-center text-gray-500 py-8 font-mono">No records found.</div>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                data.forEach((player, index) => {
+                    let rankTpl = '';
+                    if (index === 0) rankTpl = '<span class="w-8 h-8 rounded-full bg-yellow-400 text-slate-900 flex items-center justify-center font-black shadow-[0_0_10px_rgba(250,204,21,0.8)]">1</span>';
+                    else if (index === 1) rankTpl = '<span class="w-8 h-8 rounded-full bg-gray-300 text-slate-900 flex items-center justify-center font-black shadow-[0_0_10px_rgba(209,213,219,0.8)]">2</span>';
+                    else if (index === 2) rankTpl = '<span class="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-black shadow-[0_0_10px_rgba(217,119,6,0.8)]">3</span>';
+                    else rankTpl = `<span class="text-gray-400 font-bold">${index + 1}</span>`;
+
+                    const item = document.createElement('div');
+                    item.className = 'grid grid-cols-12 gap-2 p-3 items-center bg-slate-800/50 rounded-xl border border-slate-700/50 hover:bg-slate-700/50 transition-colors';
+                    item.innerHTML = `
+                        <div class="col-span-2 flex justify-center">${rankTpl}</div>
+                        <div class="col-span-4 font-bold text-white truncate">${player.studentId}</div>
+                        <div class="col-span-3 text-right font-black text-yellow-300 font-mono">${player.score}</div>
+                        <div class="col-span-3 text-right font-bold text-teal-400 font-mono">${formatTime(player.time)}</div>
+                    `;
+                    list.appendChild(item);
+                });
+
+            } catch (error) {
+                console.error("Leaderboard fetch error:", error);
+                list.innerHTML = '<div class="text-center text-red-400 py-8 font-mono">Network Error. Failed to fetch leaderboard.</div>';
+            }
+        }
+
         async function startGame() {
-            await initAudio(); // Start audio context on user gesture
+            await initAudio();
 
             const idInput = document.getElementById('student-id').value.trim();
             if(!idInput) {
@@ -877,7 +989,7 @@
             if (isCorrect) {
                 dropZone.classList.add('filled-correct');
                 state.score += 100; 
-                if(timeSpent < 15) state.score += 30; // speed bonus
+                if(timeSpent < 15) state.score += 30;
                 playCorrectSound(); 
                 showFeedback(true);
             } else {
@@ -903,7 +1015,6 @@
                 document.getElementById('feedback-overlay').classList.add('hidden');
                 document.getElementById('feedback-overlay').classList.remove('flex');
                 
-                // Cleanup any orphaned blocks
                 document.querySelectorAll('body > .code-block').forEach(b => b.remove());
                 
                 state.currentQuestionIndex++;
@@ -964,7 +1075,7 @@
 
         async function sendDataToSheets() {
             if (!APPS_SCRIPT_URL) {
-                document.getElementById('sync-status').innerHTML = "https://script.google.com/macros/s/AKfycbwo6acngsBjFjB7Y0ajm3lPbGs8cKb87HTRsd3fmZ0aYUBiyw7LhxKYiFptWYHgBhVl/exec";
+                document.getElementById('sync-status').innerHTML = "⚠️ Offline Mode (No API URL)";
                 document.getElementById('sync-status').classList.replace('text-gray-400', 'text-yellow-400');
                 return;
             }
@@ -978,19 +1089,23 @@
             };
 
             try {
-                // แก้ปัญหา CORS 100% ด้วยการบังคับ mode: 'no-cors'
-                // หมายเหตุ: เบราว์เซอร์จะไม่ให้อ่าน response กลับมา แต่รับประกันว่าส่งข้อมูลผ่านการสกัดกั้น
                 fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // คำสั่งสำคัญที่สุดในการส่งหา Google Apps Script
+                    redirect: 'follow', // รับค่าการส่งกลับของ Google Script อย่างถูกต้อง
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
-                }).then(() => {
-                    document.getElementById('sync-status').innerHTML = "✅ Database Sync Complete";
-                    document.getElementById('sync-status').classList.replace('text-gray-400', 'text-emerald-400');
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === "success") {
+                        document.getElementById('sync-status').innerHTML = "✅ Database Sync Complete";
+                        document.getElementById('sync-status').classList.replace('text-gray-400', 'text-emerald-400');
+                    } else {
+                        throw new Error(data.message || "Unknown Backend Error");
+                    }
                 }).catch((error) => {
                     console.error("Network Fetch Error:", error);
-                    document.getElementById('sync-status').innerHTML = "❌ Sync Failed. Network Error.";
+                    document.getElementById('sync-status').innerHTML = "❌ Sync Failed: " + error.message;
                     document.getElementById('sync-status').classList.replace('text-gray-400', 'text-red-400');
                 });
             } catch (error) {
@@ -1046,7 +1161,7 @@
         // ==========================================
         
         document.getElementById('open-manage-btn').addEventListener('click', () => {
-            initAudio(); // Initialize audio context just in case
+            initAudio();
             document.getElementById('password-modal').classList.remove('hidden');
             document.getElementById('password-modal').classList.add('flex');
             document.getElementById('admin-password').value = '';
@@ -1060,7 +1175,7 @@
 
         document.getElementById('submit-password-btn').addEventListener('click', () => {
             const pwd = document.getElementById('admin-password').value;
-            if (pwd === 'admin123') { // รหัสผ่านตั้งต้น
+            if (pwd === 'admin123') {
                 document.getElementById('password-modal').classList.add('hidden');
                 document.getElementById('password-modal').classList.remove('flex');
                 ui.login.classList.add('hidden');
@@ -1101,7 +1216,6 @@
             });
         }
 
-        // Global so it can be called from inline onclick
         window.deleteQuestion = function(index) {
             qBank.splice(index, 1);
             renderManageQuestions();
@@ -1215,10 +1329,8 @@
 
         // Download CSV Template Logic
         document.getElementById('download-template-btn').addEventListener('click', () => {
-            // Updated template content with fixed syntax highlighting and proper spacing
             const csvContent = `Question,Code,CorrectAnswer,Choices\n"ลากคำสั่งตรวจสอบเงื่อนไขหลักไปเติมให้ถูกต้อง","<span class=""var"">age</span> = <span class=""num"">15</span>\\n<div class=""drop-zone"" data-target=""if""></div> <span class=""var"">age</span> >= <span class=""num"">18</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Adult'</span>)","if","if, elif, else"\n"หาผลลัพธ์: x = 10, y = 5 จะแสดงผลคำว่าอะไร?","<span class=""var"">x</span> = <span class=""num"">10</span>; <span class=""var"">y</span> = <span class=""num"">5</span>\\n<span class=""kw"">if</span> <span class=""var"">x</span> < <span class=""var"">y</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'A'</span>)\\n<span class=""kw"">else</span>:\\n    <div class=""drop-zone"" data-target=""print('B')""></div>","print('B')","print('B'), print('A'), print('C')"\n"ผู้เล่นอายุน้อยกว่า 13 ห้ามเล่น เติมตัวดำเนินการที่เหมาะสม","<span class=""kw"">if</span> <span class=""var"">age</span> <div class=""drop-zone"" data-target=""<""></div> <span class=""num"">13</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Not allowed'</span>)","<","<, <=, >, =="\n"โปรแกรมทายตัวเลข โค้ดส่วนใดหายไป?","<span class=""kw"">if</span> <span class=""var"">guess</span> > <span class=""var"">ans</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Too high'</span>)\\n<div class=""drop-zone"" data-target=""elif""></div> <span class=""var"">guess</span> < <span class=""var"">ans</span>:\\n    <span class=""fn"">print</span>(<span class=""str"">'Too low'</span>)","elif","elif, else, if"`;
             
-            // Add BOM (Byte Order Mark) to ensure Excel opens it as UTF-8 properly
             const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
