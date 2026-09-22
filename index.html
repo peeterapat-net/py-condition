@@ -395,6 +395,14 @@
         <canvas id="output_canvas"></canvas>
     </div>
 
+    <!-- Background Overlay for Login/Start Screen -->
+    <!-- เปลี่ยน URL ใน style ให้เป็นลิงก์ภาพ Raw จาก GitHub ของคุณ -->
+    <div id="login-bg" class="fixed inset-0 z-[5] bg-cover bg-center transition-opacity duration-700 hidden" 
+         style="background-image: url('bg condition.jpg');">
+         <!-- เพิ่มเลเยอร์ไล่ระดับสีเพื่อให้ข้อความด้านล่างอ่านง่ายขึ้น -->
+         <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent"></div>
+    </div>
+
     <!-- AR Cursor -->
     <div id="ar-cursor"></div>
 
@@ -413,21 +421,12 @@
             <p class="text-xs text-slate-400">Awaiting Camera Permission</p>
         </div>
 
-        <!-- Login Screen -->
-        <div id="login-screen" class="glass-panel w-full max-w-lg p-8 rounded-[2rem] hidden flex-col items-center animate-slide-up relative overflow-hidden">
+        <!-- Login Screen (Simplified with Image Background) -->
+        <div id="login-screen" class="glass-panel w-full max-w-lg p-8 rounded-[2rem] hidden flex-col items-center animate-slide-up relative overflow-hidden mt-auto mb-10 z-10">
             <!-- Decorative Glow -->
             <div class="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/20 blur-[50px] rounded-full pointer-events-none"></div>
-            <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-purple-500/20 blur-[50px] rounded-full pointer-events-none"></div>
-
-            <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl mb-4 border border-white/10 shadow-lg relative group">
-                <div class="absolute inset-0 bg-cyan-400/20 blur-md rounded-2xl opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                <svg class="relative w-12 h-12 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-            </div>
             
-            <h1 class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-300 to-yellow-300 mb-1 text-center drop-shadow-sm">Python AR</h1>
-            <h2 class="text-sm font-bold text-slate-300 tracking-[0.3em] uppercase mb-8">Condition Quest</h2>
-            
-            <div class="w-full mb-6 pointer-events-auto relative">
+            <div class="w-full mb-6 pointer-events-auto relative z-10">
                 <label class="block text-cyan-400 font-bold mb-2 text-xs uppercase tracking-wider ml-1">Developer ID</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -437,27 +436,15 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900/80 p-5 rounded-xl border border-white/5 mb-8 text-sm text-slate-300 w-full shadow-inner relative overflow-hidden">
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-purple-500"></div>
-                <p class="font-bold text-cyan-300 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
-                    AR Interaction Protocol
-                </p>
-                <ul class="list-none space-y-2 text-xs leading-relaxed ml-1">
-                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> ใช้ <b>นิ้วชี้</b> เล็งพอยน์เตอร์ไปที่บล็อกโค้ดด้านล่าง</li>
-                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> <b>จีบนิ้ว</b> (นิ้วชี้+โป้ง) ค้างไว้เพื่อ <b>หยิบ</b> บล็อกโค้ด</li>
-                    <li class="flex items-start gap-2"><span class="text-cyan-500">▪</span> <b>ลาก</b> ไปใส่ใน <b>[ ช่องว่าง ]</b> แล้วปล่อยนิ้ว</li>
-                </ul>
-            </div>
-
-            <button id="start-btn" class="ar-btn w-full bg-gradient-to-r from-cyan-500 to-emerald-400 text-slate-950 font-black text-xl py-4 rounded-xl shadow-[0_0_20px_rgba(0,240,255,0.4)] uppercase tracking-widest mb-4 border-b-4 border-emerald-600 active:border-b-0 active:mt-1">
-                Initialize Quest
+            <button id="start-btn" class="ar-btn w-full bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-black text-2xl py-4 rounded-xl shadow-[0_0_20px_rgba(52,211,153,0.5)] uppercase tracking-widest mb-4 border-b-4 border-teal-700 active:border-b-0 active:mt-1 flex justify-center items-center gap-2">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                เริ่มเกม
             </button>
 
-            <div class="flex w-full gap-3">
+            <div class="flex w-full gap-3 z-10">
                 <button id="open-leaderboard-btn" class="ar-btn flex-1 bg-slate-800/80 text-white font-bold text-sm py-3 rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-slate-700 transition-colors flex justify-center items-center gap-2 cursor-pointer shadow-lg">
                     <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    RANKINGS
+                    RANKING
                 </button>
 
                 <button id="open-manage-btn" class="ar-btn flex-1 bg-slate-800/80 text-white font-bold text-sm py-3 rounded-xl border border-white/10 hover:border-purple-400/50 hover:bg-slate-700 transition-colors flex justify-center items-center gap-2 cursor-pointer shadow-lg">
@@ -637,7 +624,7 @@
         </div>
 
         <!-- Leaderboard Screen -->
-        <div id="leaderboard-screen" class="glass-panel w-full max-w-3xl p-8 rounded-[2rem] hidden flex-col items-center pointer-events-auto animate-slide-up border border-yellow-500/20">
+        <div id="leaderboard-screen" class="glass-panel w-full max-w-3xl p-8 rounded-[2rem] hidden flex-col items-center pointer-events-auto animate-slide-up border border-yellow-500/20 z-10">
             <div class="w-full flex justify-between items-center mb-8 pb-4 border-b border-white/10">
                 <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 tracking-wider flex items-center gap-3 drop-shadow-sm">
                     <svg class="w-8 h-8 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
@@ -662,7 +649,7 @@
         </div>
 
         <!-- Manage Screen -->
-        <div id="manage-screen" class="glass-panel w-full max-w-5xl p-8 rounded-[2rem] hidden flex-col items-center max-h-[90vh] overflow-hidden pointer-events-auto animate-slide-up border border-purple-500/30 relative">
+        <div id="manage-screen" class="glass-panel w-full max-w-5xl p-8 rounded-[2rem] hidden flex-col items-center max-h-[90vh] overflow-hidden pointer-events-auto animate-slide-up border border-purple-500/30 relative z-10">
             
             <!-- Sticky Header -->
             <div class="w-full flex justify-between items-center mb-6 shrink-0 border-b border-white/10 pb-4">
@@ -825,59 +812,59 @@
         // ==========================================
         const qBank = [
             { q: "ลากคำสั่งตรวจสอบเงื่อนไขหลักไปเติมให้ถูกต้อง", ans: "if", choices: ["if", "elif", "else"],
-              code: `<span class="var">age</span> <span class="op">=</span> <span class="num">15</span>\n<div class="drop-zone" data-target="if"></div> <span class="var">age</span> <span class="op">>=</span> <span class="num">18</span>:\n    <span class="fn">print</span>(<span class="str">'Adult'</span>)` },
+              code: `<span class="var">age</span> = <span class="num">15</span>\n<div class="drop-zone" data-target="if"></div> <span class="var">age</span> >= <span class="num">18</span>:\n    <span class="fn">print</span>(<span class="str">'Adult'</span>)` },
             { q: "เติมคำสั่งสำหรับกรณีที่ไม่ตรงกับเงื่อนไขใดเลย", ans: "else:", choices: ["else:", "elif:", "if:"],
-              code: `<span class="kw">if</span> <span class="var">x</span> <span class="op">></span> <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">'Yes'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">x</span> > <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">'Yes'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
             { q: "ลากตัวดำเนินการ 'เท่ากับ' ไปใส่ในโค้ด", ans: "==", choices: ["==", "=", "!=", ">="],
               code: `<span class="kw">if</span> <span class="var">pwd</span> <div class="drop-zone" data-target="=="></div> <span class="str">'1234'</span>:\n    <span class="fn">print</span>(<span class="str">'Welcome'</span>)` },
             { q: "เติมคำสั่งสำหรับเงื่อนไขที่สอง (ถ้าเงื่อนไขแรกเป็นเท็จ)", ans: "elif", choices: ["elif", "else", "if"],
-              code: `<span class="kw">if</span> <span class="var">score</span> <span class="op">>=</span> <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">score</span> <span class="op">>=</span> <span class="num">70</span>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">score</span> >= <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">score</span> >= <span class="num">70</span>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
             { q: "ลากตัวดำเนินการ 'ไม่เท่ากับ' ไปใส่ในโค้ด", ans: "!=", choices: ["!=", "==", "not", "<>"],
               code: `<span class="kw">if</span> <span class="var">status</span> <div class="drop-zone" data-target="!="></div> <span class="str">'admin'</span>:\n    <span class="fn">print</span>(<span class="str">'Access Denied'</span>)` },
             { q: "เติมโครงสร้างให้สมบูรณ์เมื่อต้องการเช็คเงื่อนไขเดียว", ans: "if", choices: ["if", "elif", "else"],
-              code: `<div class="drop-zone" data-target="if"></div> <span class="var">money</span> <span class="op"><</span> <span class="num">100</span>:\n    <span class="fn">print</span>(<span class="str">'Not enough'</span>)` },
+              code: `<div class="drop-zone" data-target="if"></div> <span class="var">money</span> < <span class="num">100</span>:\n    <span class="fn">print</span>(<span class="str">'Not enough'</span>)` },
             { q: "โปรแกรมทายตัวเลข โค้ดส่วนใดหายไป?", ans: "elif", choices: ["elif", "else", "if"],
-              code: `<span class="kw">if</span> <span class="var">guess</span> <span class="op">></span> <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too high'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">guess</span> <span class="op"><</span> <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too low'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">guess</span> > <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too high'</span>)\n<div class="drop-zone" data-target="elif"></div> <span class="var">guess</span> < <span class="var">ans</span>:\n    <span class="fn">print</span>(<span class="str">'Too low'</span>)` },
             { q: "ตัวดำเนินการใดแปลว่า 'น้อยกว่าหรือเท่ากับ'", ans: "<=", choices: ["<=", ">=", "<", "=="],
               code: `<span class="kw">if</span> <span class="var">stock</span> <div class="drop-zone" data-target="<="></div> <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">'Reorder needed'</span>)` },
             { q: "ไวยากรณ์ (Syntax) ที่ถูกต้องต้องมีอะไรปิดท้ายบรรทัด if?", ans: ":", choices: [":", ";", "{", "()"],
-              code: `<span class="kw">if</span> <span class="var">is_rainy</span> <span class="op">==</span> <span class="kw">True</span><div class="drop-zone" data-target=":"></div>\n    <span class="fn">print</span>(<span class="str">'Take umbrella'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">is_rainy</span> == <span class="kw">True</span><div class="drop-zone" data-target=":"></div>\n    <span class="fn">print</span>(<span class="str">'Take umbrella'</span>)` },
             { q: "คำสั่งใดใช้ตรวจสอบเมื่อ if ก่อนหน้าไม่เป็นจริง", ans: "elif", choices: ["elif", "else if", "elseif"],
-              code: `<span class="kw">if</span> <span class="var">x</span> <span class="op">==</span> <span class="num">1</span>:\n    <span class="kw">pass</span>\n<div class="drop-zone" data-target="elif"></div> <span class="var">x</span> <span class="op">==</span> <span class="num">2</span>:\n    <span class="kw">pass</span>` },
+              code: `<span class="kw">if</span> <span class="var">x</span> == <span class="num">1</span>:\n    <span class="kw">pass</span>\n<div class="drop-zone" data-target="elif"></div> <span class="var">x</span> == <span class="num">2</span>:\n    <span class="kw">pass</span>` },
             { q: "โค้ดตัดเกรดนี้ ขาดเครื่องหมายเปรียบเทียบใดเพื่อให้คนที่ได้ 80 พอดีได้เกรด A", ans: ">=", choices: [">=", ">", "==", "<="],
               code: `<span class="kw">if</span> <span class="var">score</span> <div class="drop-zone" data-target=">="></div> <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)` },
             { q: "หาผลลัพธ์: x = 10, y = 5 จะแสดงผลคำว่าอะไร?", ans: "print('B')", choices: ["print('B')", "print('A')", "print('C')"],
-              code: `<span class="var">x</span> <span class="op">=</span> <span class="num">10</span>\n<span class="var">y</span> <span class="op">=</span> <span class="num">5</span>\n<span class="kw">if</span> <span class="var">x</span> <span class="op"><</span> <span class="var">y</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">else</span>:\n    <div class="drop-zone" data-target="print('B')"></div>` },
+              code: `<span class="var">x</span> = <span class="num">10</span>; <span class="var">y</span> = <span class="num">5</span>\n<span class="kw">if</span> <span class="var">x</span> < <span class="var">y</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">else</span>:\n    <div class="drop-zone" data-target="print('B')"></div>` },
             { q: "ผู้เล่นอายุน้อยกว่า 13 ห้ามเล่น เติมตัวดำเนินการที่เหมาะสม", ans: "<", choices: ["<", "<=", ">", "=="],
               code: `<span class="kw">if</span> <span class="var">age</span> <div class="drop-zone" data-target="<"></div> <span class="num">13</span>:\n    <span class="fn">print</span>(<span class="str">'Not allowed'</span>)` },
             { q: "ถ้าต้องการตรวจสอบว่าเลขเป็นจำนวนคู่ (หาร 2 ลงตัว)", ans: "% 2 == 0", choices: ["% 2 == 0", "/ 2 == 0", "% 2 != 0"],
               code: `<span class="kw">if</span> <span class="var">number</span> <div class="drop-zone" data-target="% 2 == 0"></div>:\n    <span class="fn">print</span>(<span class="str">'Even'</span>)` },
             { q: "โครงสร้าง if-elif-else ต้องจบด้วยอะไร (หากครอบคลุมกรณีที่เหลือ)", ans: "else:", choices: ["else:", "elif:", "endif:"],
-              code: `<span class="kw">if</span> <span class="var">x</span> <span class="op">></span> <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Pos'</span>)\n<span class="kw">elif</span> <span class="var">x</span> <span class="op"><</span> <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Neg'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'Zero'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">x</span> > <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Pos'</span>)\n<span class="kw">elif</span> <span class="var">x</span> < <span class="num">0</span>: <span class="fn">print</span>(<span class="str">'Neg'</span>)\n<div class="drop-zone" data-target="else:"></div>\n    <span class="fn">print</span>(<span class="str">'Zero'</span>)` },
             { q: "แก้ไข Bug: บรรทัดใดขาดเครื่องหมาย Colon (:)", ans: "elif temp > 30:", choices: ["elif temp > 30:", "if temp > 40:", "else:"],
-              code: `<span class="kw">if</span> <span class="var">temp</span> <span class="op">></span> <span class="num">40</span>:\n    <span class="fn">print</span>(<span class="str">'Very Hot'</span>)\n<div class="drop-zone" data-target="elif temp > 30:"></div>\n    <span class="fn">print</span>(<span class="str">'Hot'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">temp</span> > <span class="num">40</span>:\n    <span class="fn">print</span>(<span class="str">'Very Hot'</span>)\n<div class="drop-zone" data-target="elif temp > 30:"></div>\n    <span class="fn">print</span>(<span class="str">'Hot'</span>)` },
             { q: "ลากเงื่อนไขที่รวม 2 กรณีด้วย 'หรือ' (or)", ans: "or", choices: ["or", "and", "not", "&&"],
-              code: `<span class="kw">if</span> <span class="var">day</span> <span class="op">==</span> <span class="str">'Sat'</span> <div class="drop-zone" data-target="or"></div> <span class="var">day</span> <span class="op">==</span> <span class="str">'Sun'</span>:\n    <span class="fn">print</span>(<span class="str">'Weekend'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">day</span> == <span class="str">'Sat'</span> <div class="drop-zone" data-target="or"></div> <span class="var">day</span> == <span class="str">'Sun'</span>:\n    <span class="fn">print</span>(<span class="str">'Weekend'</span>)` },
             { q: "ผลลัพธ์ของโค้ดคืออะไร (num = 7)?", ans: "print('Yes')", choices: ["print('Yes')", "print('No')", "Error"],
-              code: `<span class="var">num</span> <span class="op">=</span> <span class="num">7</span>\n<span class="kw">if</span> <span class="var">num</span> <span class="op">></span> <span class="num">5</span> <span class="kw">and</span> <span class="var">num</span> <span class="op"><</span> <span class="num">10</span>:\n    <div class="drop-zone" data-target="print('Yes')"></div>\n<span class="kw">else</span>:\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
+              code: `<span class="var">num</span> = <span class="num">7</span>\n<span class="kw">if</span> <span class="var">num</span> > <span class="num">5</span> <span class="kw">and</span> <span class="var">num</span> < <span class="num">10</span>:\n    <div class="drop-zone" data-target="print('Yes')"></div>\n<span class="kw">else</span>:\n    <span class="fn">print</span>(<span class="str">'No'</span>)` },
             { q: "ตรวจสอบตัวแปรข้อความว่าเป็นค่าว่างหรือไม่", ans: "== ''", choices: ["== ''", "== 0", "== None"],
               code: `<span class="kw">if</span> <span class="var">name</span> <div class="drop-zone" data-target="== ''"></div>:\n    <span class="fn">print</span>(<span class="str">'Please enter name'</span>)` },
             { q: "การเขียนเงื่อนไขแบบลดรูป (Shorthand) ตัวแปร x เป็นจริง", ans: "if x:", choices: ["if x:", "if x == True:", "if x is True:"],
-              code: `<span class="var">x</span> <span class="op">=</span> <span class="kw">True</span>\n<div class="drop-zone" data-target="if x:"></div>\n    <span class="fn">print</span>(<span class="str">'Is True'</span>)` },
+              code: `<span class="var">x</span> = <span class="kw">True</span>\n<div class="drop-zone" data-target="if x:"></div>\n    <span class="fn">print</span>(<span class="str">'Is True'</span>)` },
             { q: "ลำดับการทำงาน: ระบบตัดเกรดต้องเรียงจากคะแนนสูงไปต่ำ ลากเงื่อนไขที่ถูกต้อง", ans: "score >= 70", choices: ["score >= 70", "score >= 80", "score < 70"],
-              code: `<span class="kw">if</span> <span class="var">score</span> <span class="op">>=</span> <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">elif</span> <span class="var">score</span> <div class="drop-zone" data-target="score >= 70"></div>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">score</span> >= <span class="num">80</span>:\n    <span class="fn">print</span>(<span class="str">'A'</span>)\n<span class="kw">elif</span> <span class="var">score</span> <div class="drop-zone" data-target="score >= 70"></div>:\n    <span class="fn">print</span>(<span class="str">'B'</span>)` },
             { q: "Nested if (if ซ้อน if) เติมบรรทัดที่ทำให้โค้ดทำงานถูกต้องเมื่อ x=10, y=20", ans: "if y > 15:", choices: ["if y > 15:", "if y < 15:", "elif y > 15:"],
-              code: `<span class="kw">if</span> <span class="var">x</span> <span class="op">==</span> <span class="num">10</span>:\n    <div class="drop-zone" data-target="if y > 15:"></div>\n        <span class="fn">print</span>(<span class="str">'x is 10 and y > 15'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">x</span> == <span class="num">10</span>:\n    <div class="drop-zone" data-target="if y > 15:"></div>\n        <span class="fn">print</span>(<span class="str">'x is 10 and y > 15'</span>)` },
             { q: "ลากเงื่อนไขที่เทียบเท่ากับ: if not (x == y):", ans: "x != y", choices: ["x != y", "x <> y", "x not y", "x == y"],
               code: `<span class="kw">if</span> <span class="var">x</span> <div class="drop-zone" data-target="x != y"></div>:\n    <span class="fn">print</span>(<span class="str">'Different'</span>)` },
             { q: "คำนวณส่วนลด: ถ้ายอดซื้อ (total) เกิน 500 ลด 10%", ans: "total * 0.9", choices: ["total * 0.9", "total - 10", "total * 0.1"],
-              code: `<span class="kw">if</span> <span class="var">total</span> <span class="op">></span> <span class="num">500</span>:\n    <span class="var">pay</span> <span class="op">=</span> <div class="drop-zone" data-target="total * 0.9"></div>` },
+              code: `<span class="kw">if</span> <span class="var">total</span> > <span class="num">500</span>:\n    <span class="var">pay</span> = <div class="drop-zone" data-target="total * 0.9"></div>` },
             { q: "ตรวจสอบความยาวรหัสผ่าน (pwd) ว่าต้อง 8 ตัวขึ้นไป ใช้ฟังก์ชันใด?", ans: "len(pwd)", choices: ["len(pwd)", "pwd.length", "size(pwd)"],
-              code: `<span class="kw">if</span> <div class="drop-zone" data-target="len(pwd)"></div> <span class="op">>=</span> <span class="num">8</span>:\n    <span class="fn">print</span>(<span class="str">'Valid'</span>)` },
+              code: `<span class="kw">if</span> <div class="drop-zone" data-target="len(pwd)"></div> >= <span class="num">8</span>:\n    <span class="fn">print</span>(<span class="str">'Valid'</span>)` },
             { q: "โปรแกรมคิดค่าส่งฟรี: สมาชิก(is_member) หรือ ยอดซื้อ>=1000", ans: "or", choices: ["or", "and", "not"],
-              code: `<span class="kw">if</span> <span class="var">is_member</span> <div class="drop-zone" data-target="or"></div> <span class="var">purchase</span> <span class="op">>=</span> <span class="num">1000</span>:\n    <span class="fn">print</span>(<span class="str">'Free Shipping'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">is_member</span> <div class="drop-zone" data-target="or"></div> <span class="var">purchase</span> >= <span class="num">1000</span>:\n    <span class="fn">print</span>(<span class="str">'Free Shipping'</span>)` },
             { q: "แก้ Logic Error: โค้ดนี้เช็คว่าเลขอยู่ในช่วง 10-20 หรือไม่", ans: "and", choices: ["and", "or", "&"],
-              code: `<span class="kw">if</span> <span class="var">num</span> <span class="op">>=</span> <span class="num">10</span> <div class="drop-zone" data-target="and"></div> <span class="var">num</span> <span class="op"><=</span> <span class="num">20</span>:\n    <span class="fn">print</span>(<span class="str">'In range'</span>)` },
+              code: `<span class="kw">if</span> <span class="var">num</span> >= <span class="num">10</span> <div class="drop-zone" data-target="and"></div> <span class="var">num</span> <= <span class="num">20</span>:\n    <span class="fn">print</span>(<span class="str">'In range'</span>)` },
             { q: "การเช็คชนิดข้อมูล: ถ้ารับค่า x มาเป็นตัวเลข", ans: "type(x) == int", choices: ["type(x) == int", "x == int", "int(x) == True"],
               code: `<span class="kw">if</span> <div class="drop-zone" data-target="type(x) == int"></div>:\n    <span class="fn">print</span>(<span class="str">'Is Integer'</span>)` },
             { q: "ตรวจสอบว่าค่าตัวแปรลิสต์ว่างหรือไม่", ans: "len(my_list) == 0", choices: ["len(my_list) == 0", "my_list == empty", "my_list == None"],
@@ -975,6 +962,9 @@
 
         camera.start().then(() => {
             ui.loading.classList.add('hidden');
+            
+            // Show background and login screen
+            document.getElementById('login-bg').classList.remove('hidden');
             ui.login.classList.remove('hidden');
             ui.login.classList.add('flex');
             
@@ -1172,6 +1162,9 @@
             
             state.questions = shuffleArray([...qBank]).slice(0, state.totalQuestions);
 
+            // Hide the Background Image when game starts to show the AR Camera
+            document.getElementById('login-bg').classList.add('hidden');
+            
             ui.login.classList.remove('flex');
             ui.login.classList.add('hidden');
             ui.game.classList.remove('hidden');
@@ -1315,6 +1308,10 @@
         function resetGame() {
             ui.result.classList.remove('flex');
             ui.result.classList.add('hidden');
+            
+            // Show background image again
+            document.getElementById('login-bg').classList.remove('hidden');
+            
             ui.login.classList.remove('hidden');
             ui.login.classList.add('flex');
             document.getElementById('sync-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Syncing to Neural Net...';
